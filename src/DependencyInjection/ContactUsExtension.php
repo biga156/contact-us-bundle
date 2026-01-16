@@ -20,6 +20,7 @@ class ContactUsExtension extends Extension
         $container->setParameter('contact_us.recipients', $config['recipients']);
         $container->setParameter('contact_us.subject_prefix', $config['subject_prefix']);
         $container->setParameter('contact_us.storage', $config['storage']);
+        $container->setParameter('contact_us.entity_class', $config['entity_class']);
         $container->setParameter('contact_us.spam_protection', $config['spam_protection']);
         $container->setParameter('contact_us.fields', $config['fields']);
         $container->setParameter('contact_us.api', $config['api']);
