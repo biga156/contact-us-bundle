@@ -16,6 +16,7 @@ use Caeligo\ContactUsBundle\SpamProtection\TimingValidator;
 use Caeligo\ContactUsBundle\Storage\DoctrineStorage;
 use Caeligo\ContactUsBundle\Storage\NullStorage;
 use Caeligo\ContactUsBundle\Storage\StorageInterface;
+use Caeligo\ContactUsBundle\Twig\ContactUsExtension;
 
 return static function (ContainerConfigurator $container): void {
     $services = $container->services()
@@ -82,4 +83,10 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$entityManager', service('doctrine.orm.entity_manager')->nullOnInvalid())
         ->arg('$projectDir', param('kernel.project_dir'))
         ->tag('console.command');
+
+    // Twig Extension
+    $services->set(ContactUsExtension::class)
+        ->arg('$templates', param('contact_us.templates'))
+        ->arg('$design', param('contact_us.design'))
+        ->tag('twig.extension');
 };

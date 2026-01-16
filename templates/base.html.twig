@@ -1,3 +1,8 @@
+{# 
+    Standalone base template for Contact Us Bundle
+    Override this in templates/bundles/ContactUsBundle/base.html.twig
+    or configure contact_us.templates.base to use your app's base template
+#}
 <!DOCTYPE html>
 <html lang="{{ app.request.locale }}">
 <head>
@@ -6,7 +11,10 @@
     <title>{% block title %}Contact Us{% endblock %}</title>
     
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('bundles/contactus/styles/contact.css') }}">
+        {# Load default styles only if enabled in config #}
+        {% if contact_us_config.design.load_default_styles|default(true) %}
+            <link rel="stylesheet" href="{{ asset('bundles/contactus/styles/contact.css') }}">
+        {% endif %}
     {% endblock %}
 </head>
 <body>
@@ -15,13 +23,16 @@
     {% endblock %}
 
     {% block javascripts %}
-        {{ importmap('app') }}
-        <script type="module">
-            import { Application } from '@hotwired/stimulus';
-            import ContactController from '{{ asset('bundles/contactus/controllers/contact_controller.js') }}';
-            window.Stimulus = Application.start();
-            window.Stimulus.register('contact', ContactController);
-        </script>
+        {# Load Stimulus controller only if enabled in config #}
+        {% if contact_us_config.design.load_stimulus_controller|default(true) %}
+            {{ importmap('app') }}
+            <script type="module">
+                import { Application } from '@hotwired/stimulus';
+                import ContactController from '{{ asset('bundles/contactus/controllers/contact_controller.js') }}';
+                window.Stimulus = Application.start();
+                window.Stimulus.register('contact', ContactController);
+            </script>
+        {% endif %}
     {% endblock %}
 </body>
 </html>

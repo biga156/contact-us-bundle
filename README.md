@@ -90,13 +90,23 @@ Visit `/contact` to see the form.
 
 ## Documentation
 
-- [Configuration Reference](docs/CONFIGURATION.md)
-- [UI Variants](docs/UI_VARIANTS.md)
-- [Storage Options](docs/STORAGE.md)
-- [Spam Protection](docs/SPAM_PROTECTION.md)
-- [REST API](docs/API.md)
-- [Customization](docs/CUSTOMIZATION.md)
-- [Events](docs/EVENTS.md)
+- [📖 Installation Guide](docs/INSTALLATION.md)
+- [⚙️ Configuration Reference](docs/CONFIGURATION.md)
+- [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
+- [🔧 Storage Options](docs/STORAGE.md)
+- [🛡️ Spam Protection](docs/SPAM_PROTECTION.md)
+- [🔌 Events & Extension](docs/EVENTS.md)
+
+## Template Customization
+
+The bundle is designed to integrate seamlessly with your existing application design. You can:
+
+- **Use your own base template** - Configure `contact_us.templates.base: 'base.html.twig'`
+- **Override bundle templates** - Create templates in `templates/bundles/ContactUsBundle/`
+- **Disable default styles** - Set `contact_us.design.load_default_styles: false`
+- **Use any CSS framework** - Bootstrap, Tailwind, custom CSS - your choice
+
+**See the [Customization Guide](docs/CUSTOMIZATION.md) for complete examples.**
 
 ## License
 

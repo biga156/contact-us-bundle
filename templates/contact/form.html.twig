@@ -1,4 +1,13 @@
-{% extends '@ContactUs/base.html.twig' %}
+{#
+    Contact Form Template
+    
+    Override this template by creating:
+    templates/bundles/ContactUsBundle/contact/form.html.twig
+    
+    Or configure a different base template via:
+    contact_us.templates.base: 'base.html.twig'
+#}
+{% extends contact_us_config.templates.base|default('@ContactUs/base.html.twig') %}
 
 {% block title %}{{ 'contact.title'|trans }}{% endblock %}
 

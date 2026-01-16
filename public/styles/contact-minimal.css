@@ -1,0 +1,40 @@
+/* 
+ * Contact Us Bundle - Minimal CSS (Framework-agnostic)
+ * 
+ * This stylesheet contains only structural/layout CSS without any visual styling.
+ * Use this if you want to apply your own design system (Bootstrap, Tailwind, etc.)
+ * 
+ * To use this instead of the default styled version, configure:
+ * contact_us:
+ *   design:
+ *     load_default_styles: false
+ * 
+ * Then add this stylesheet manually or include it in your asset pipeline.
+ */
+
+/* Honeypot - MUST be hidden for spam protection */
+.contact-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Timing token - hidden input */
+.contact-timing-token {
+    display: none;
+}
+
+/* Optional: Basic responsive container */
+.contact-form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Optional: Basic form field spacing */
+.contact-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
