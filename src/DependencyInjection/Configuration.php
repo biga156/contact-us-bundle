@@ -236,6 +236,26 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+
+                // Translation configuration
+                ->arrayNode('translation')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->enumNode('enabled')
+                            ->info('Enable translations: auto (auto-detect), true (force), false (disable)')
+                            ->values(['auto', 'true', 'false'])
+                            ->defaultValue('auto')
+                        ->end()
+                        ->scalarNode('domain')
+                            ->info('Translation domain')
+                            ->defaultValue('contact_us')
+                        ->end()
+                        ->scalarNode('fallback_locale')
+                            ->info('Fallback locale if translation key not found')
+                            ->defaultValue('en')
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 

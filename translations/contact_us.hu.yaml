@@ -1,0 +1,39 @@
+# ContactUsBundle - Magyar fordítások
+#
+# Ez egy példa fordítási fájl. A saját alkalmazásodban felülírhatod:
+# translations/contact_us.hu.yaml
+#
+# Alapértelmezett magyar fordítások.
+
+contact:
+    title: 'Kapcsolat'
+    description: 'Töltse ki az alábbi űrlapot és hamarosan felvesszük Önnel a kapcsolatot.'
+    submit: 'Üzenet küldése'
+    submit_loading: 'Küldés...'
+    
+    # Sikeres/Hiba üzenetek
+    message:
+        success: 'Üzenetét sikeresen elküldtük. Hamarosan jelentkezünk.'
+        error: 'Hiba történt az üzenet küldése során. Kérjük, próbálja újra.'
+        spam_detected: 'Spam észlelve. Kérjük, próbálja újra később.'
+        rate_limit_exceeded: 'Túl sok kérés. Kérjük, várjon mielőtt újra próbálkozna.'
+        validation_failed: 'Kérjük, javítsa ki a hibákat az űrlapon.'
+    
+    # Űrlap mezők címkéi
+    field:
+        name: 'Név'
+        email: 'E-mail cím'
+        phone: 'Telefonszám'
+        subject: 'Tárgy'
+        message: 'Üzenet'
+        
+    # Adatvédelmi megjegyzés
+    privacy_note: 'Személyes adatait adatvédelmi irányelvünknek megfelelően kezeljük.'
+    
+    # Email hitelesítés (2. szintű spam védelem)
+    verification:
+        title: 'Email hitelesítés szükséges'
+        message: 'Elküldtünk egy hitelesítő linket az email címére. Kattintson a linkre a beküldés befejezéséhez.'
+        button: 'Email hitelesítése'
+        expired: 'Ez a hitelesítő link lejárt. Kérjük, küldje be újra az űrlapot.'
+        success: 'Az email címét sikeresen hitelesítettük és üzenetét elküldtük.'

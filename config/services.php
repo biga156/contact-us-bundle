@@ -88,5 +88,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set(ContactUsExtension::class)
         ->arg('$templates', param('contact_us.templates'))
         ->arg('$design', param('contact_us.design'))
+        ->arg('$translation', param('contact_us.translation'))
+        ->arg('$translator', service('translator')->nullOnInvalid())
         ->tag('twig.extension');
 };

@@ -42,6 +42,7 @@
         "symfony/ux-live-component": "^2.0"
     },
     "suggest": {
+        "symfony/translation": "Recommended for multi-language support (auto-detected, not required)",
         "doctrine/orm": "Required for database storage of contact messages",
         "doctrine/doctrine-bundle": "Required for database storage integration",
         "symfony/ux-live-component": "Required for LiveComponent UI variant",

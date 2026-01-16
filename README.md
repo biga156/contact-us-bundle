@@ -14,7 +14,7 @@ A highly configurable Symfony bundle for contact forms with multiple UI variants
 - 🛡️ **Multi-layer spam protection** - Honeypot, rate limiting, timing checks, optional third-party captcha
 - ♿ **Accessibility-first** - WCAG 2.1 AA compliant, no visual-only captchas
 - 🎭 **Themeable templates** - Easy customization with Twig blocks
-- 🌍 **Multilingual** - Full translation support
+- 🌍 **Multilingual** - Optional translation support with auto-detect (works without symfony/translation)
 - 🔌 **Pluggable architecture** - Events, storage adapters, captcha providers
 - 🚀 **Zero-build assets** - Works with Symfony AssetMapper (6.4+)
 
@@ -93,6 +93,7 @@ Visit `/contact` to see the form.
 - [📖 Installation Guide](docs/INSTALLATION.md)
 - [⚙️ Configuration Reference](docs/CONFIGURATION.md)
 - [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
+- [🌍 Translation Guide](docs/TRANSLATION.md) - **Multi-language support (optional)**
 - [🔧 Storage Options](docs/STORAGE.md)
 - [🛡️ Spam Protection](docs/SPAM_PROTECTION.md)
 - [🔌 Events & Extension](docs/EVENTS.md)
@@ -107,6 +108,26 @@ The bundle is designed to integrate seamlessly with your existing application de
 - **Use any CSS framework** - Bootstrap, Tailwind, custom CSS - your choice
 
 **See the [Customization Guide](docs/CUSTOMIZATION.md) for complete examples.**
+
+## Translation Support
+
+The bundle supports **optional translations** with smart auto-detection:
+
+- ✅ **With symfony/translation** - Uses translation keys from `contact_us` domain
+- ❌ **Without symfony/translation** - Auto-falls back to plain text labels
+- 🔧 **Configurable** - Force enable/disable or use custom domain
+
+```yaml
+# config/packages/contact_us.yaml
+contact_us:
+  translation:
+    enabled: auto  # auto | true | false
+    domain: contact_us
+```
+
+The bundle includes default translations in **English** and **Hungarian**. Add your own in `translations/contact_us.{locale}.yaml`.
+
+**See the [Translation Guide](docs/TRANSLATION.md) for complete documentation.**
 
 ## License
 

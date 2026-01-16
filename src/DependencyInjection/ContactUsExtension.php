@@ -28,6 +28,7 @@ class ContactUsExtension extends Extension
         $container->setParameter('contact_us.mailer', $config['mailer']);
         $container->setParameter('contact_us.templates', $config['templates']);
         $container->setParameter('contact_us.design', $config['design']);
+        $container->setParameter('contact_us.translation', $config['translation']);
 
         // Load services
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));

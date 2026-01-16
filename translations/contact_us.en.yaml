@@ -1,0 +1,39 @@
+# ContactUsBundle - English Translations
+#
+# To override these translations in your application, create:
+# translations/contact_us.en.yaml (or .xx.yaml for other locales)
+#
+# These are the default English translations provided by the bundle.
+
+contact:
+    title: 'Contact Us'
+    description: 'Fill out the form below and we will get back to you as soon as possible.'
+    submit: 'Send Message'
+    submit_loading: 'Sending...'
+    
+    # Success/Error messages
+    message:
+        success: 'Your message has been sent successfully. We will contact you soon.'
+        error: 'An error occurred while sending your message. Please try again.'
+        spam_detected: 'Spam detected. Please try again later.'
+        rate_limit_exceeded: 'Too many requests. Please wait before submitting again.'
+        validation_failed: 'Please correct the errors in the form.'
+    
+    # Form field labels
+    field:
+        name: 'Name'
+        email: 'Email Address'
+        phone: 'Phone Number'
+        subject: 'Subject'
+        message: 'Message'
+        
+    # Privacy/GDPR notice
+    privacy_note: 'Your personal information will be processed according to our privacy policy.'
+    
+    # Email verification (Level 2 spam protection)
+    verification:
+        title: 'Email Verification Required'
+        message: 'We have sent a verification link to your email address. Please click the link to complete your submission.'
+        button: 'Verify Email'
+        expired: 'This verification link has expired. Please submit the form again.'
+        success: 'Your email has been verified and your message has been sent.'
