@@ -17,6 +17,11 @@ class ContactUsExtension extends AbstractExtension implements GlobalsInterface
 {
     private bool $translationEnabled;
 
+    /**
+     * @param array<string, string> $templates
+     * @param array<string, bool|string|null> $design
+     * @param array<string, string|bool> $translation
+     */
     public function __construct(
         private array $templates,
         private array $design,
@@ -55,6 +60,7 @@ class ContactUsExtension extends AbstractExtension implements GlobalsInterface
 
     /**
      * Translate with fallback to plain text if translator unavailable
+     * @param array<string, mixed> $parameters
      */
     public function translate(string $key, array $parameters = [], ?string $domain = null): string
     {
@@ -63,10 +69,10 @@ class ContactUsExtension extends AbstractExtension implements GlobalsInterface
             return $this->extractPlainText($key);
         }
 
-        $domain = $domain ?? $this->translation['domain'];
+        $domain = $domain ?: $this->translation['domain'];
         
         try {
-            $translated = $this->translator->trans($key, $parameters, $domain);
+            $translated = $this->translator->trans($key, $parameters, (string) $domain);
             
             // If translation returns the key unchanged, use fallback
             if ($translated === $key) {
@@ -96,8 +102,7 @@ class ContactUsExtension extends AbstractExtension implements GlobalsInterface
         
         // Convert snake_case or camelCase to Title Case
         $text = preg_replace('/[_-]/', ' ', $lastPart);
-        $text = ucwords($text);
         
-        return $text;
+        return ucwords($text ?? '');
     }
 }

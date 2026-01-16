@@ -1,6 +1,7 @@
 /vendor/
 /var/
 /.phpunit.cache/
+/.phpstan/
 /phpunit.xml
 composer.lock
 .idea/

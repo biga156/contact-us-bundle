@@ -78,6 +78,9 @@ class SetupCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @return array<string>
+     */
     private function askRecipients(): array
     {
         $this->io->section('Email Recipients');
@@ -126,6 +129,9 @@ class SetupCommand extends Command
         return $choice;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     private function askEntityConfiguration(): ?array
     {
         $this->io->section('Database Configuration');
@@ -161,6 +167,9 @@ class SetupCommand extends Command
         ];
     }
 
+    /**
+     * @return array<string>
+     */
     private function findContactMessageEntities(): array
     {
         if (!$this->entityManager) {
@@ -180,6 +189,9 @@ class SetupCommand extends Command
         return $entities;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getEntityMetadata(string $entityClass): array
     {
         if (!$this->entityManager) {
@@ -201,6 +213,10 @@ class SetupCommand extends Command
         return $fields;
     }
 
+    /**
+     * @param array<string, mixed>|null $entityConfig
+     * @return array<string, mixed>
+     */
     private function askFormFields(?array $entityConfig): array
     {
         $this->io->section('Form Fields Configuration');
@@ -226,6 +242,10 @@ class SetupCommand extends Command
         return $this->getDefaultFields();
     }
 
+    /**
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>
+     */
     private function generateFieldsFromEntity(array $metadata): array
     {
         $fields = [];
@@ -270,6 +290,10 @@ class SetupCommand extends Command
         return $fields;
     }
 
+    /**
+     * @param array<string, mixed> $fieldInfo
+     * @return array<int, array<string, mixed>>
+     */
     private function generateConstraints(string $type, array $fieldInfo): array
     {
         $constraints = [];
@@ -293,6 +317,9 @@ class SetupCommand extends Command
         return $constraints;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getDefaultFields(): array
     {
         return [
@@ -326,6 +353,9 @@ class SetupCommand extends Command
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askSpamProtection(): array
     {
         $this->io->section('Spam Protection');
@@ -350,6 +380,9 @@ class SetupCommand extends Command
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function askMailerConfiguration(): array
     {
         $this->io->section('Mailer Configuration');
@@ -372,6 +405,9 @@ class SetupCommand extends Command
         ];
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function saveConfiguration(array $config): void
     {
         $configFile = $this->projectDir . '/config/packages/contact_us.yaml';

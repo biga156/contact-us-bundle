@@ -14,6 +14,9 @@ class ContactEmailSentEvent extends Event
 {
     public const NAME = 'contact_us.email_sent';
 
+    /**
+     * @param array<string> $recipients
+     */
     public function __construct(
         private ContactMessage $message,
         private array $recipients
@@ -25,6 +28,9 @@ class ContactEmailSentEvent extends Event
         return $this->message;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getRecipients(): array
     {
         return $this->recipients;

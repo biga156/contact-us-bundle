@@ -10,16 +10,23 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Doctrine storage adapter
+ * @template T of object
  */
 class DoctrineStorage implements StorageInterface
 {
+    /** @var class-string<T> */
     private string $entityClass;
 
+    /**
+     * @param class-string<T>|null $entityClass
+     */
     public function __construct(
         private ?EntityManagerInterface $entityManager = null,
         ?string $entityClass = null
     ) {
-        $this->entityClass = $entityClass ?? ContactMessageEntity::class;
+        /** @var class-string<T> $resolvedClass */
+        $resolvedClass = $entityClass ?? ContactMessageEntity::class;
+        $this->entityClass = $resolvedClass;
     }
 
     public function save(ContactMessage $message): void
@@ -55,6 +62,10 @@ class DoctrineStorage implements StorageInterface
             }
         }
 
+        if ($this->entityManager === null) {
+            throw new \RuntimeException('EntityManager is not available.');
+        }
+        
         $this->entityManager->persist($entity);
         $this->entityManager->flush();
 
@@ -66,10 +77,11 @@ class DoctrineStorage implements StorageInterface
 
     public function findById(int $id): ?ContactMessage
     {
-        if (!$this->isAvailable()) {
+        if (!$this->isAvailable() || $this->entityManager === null) {
             return null;
         }
 
+        /** @var T|null $entity */
         $entity = $this->entityManager->getRepository($this->entityClass)->find($id);
         
         if ($entity === null) {
@@ -77,7 +89,7 @@ class DoctrineStorage implements StorageInterface
         }
 
         // If it's the default entity, use toModel() method
-        if ($this->entityClass === ContactMessageEntity::class) {
+        if ($entity instanceof ContactMessageEntity) {
             return $entity->toModel();
         }
 
@@ -88,11 +100,11 @@ class DoctrineStorage implements StorageInterface
         } else {
             // Map individual properties to data array
             $model->setData([
-                'name' => $entity->getTitle() ?? '',
-                'email' => $entity->getEmail() ?? '',
-                'subject' => $entity->getSubtitle() ?? '',
-                'message' => $entity->getBody() ?? '',
-                'phone' => $entity->getPhone() ?? '',
+                'name' => method_exists($entity, 'getTitle') ? ($entity->getTitle() ?? '') : '',
+                'email' => method_exists($entity, 'getEmail') ? ($entity->getEmail() ?? '') : '',
+                'subject' => method_exists($entity, 'getSubtitle') ? ($entity->getSubtitle() ?? '') : '',
+                'message' => method_exists($entity, 'getBody') ? ($entity->getBody() ?? '') : '',
+                'phone' => method_exists($entity, 'getPhone') ? ($entity->getPhone() ?? '') : '',
             ]);
         }
         if (method_exists($entity, 'getIpAddress')) {
@@ -110,10 +122,11 @@ class DoctrineStorage implements StorageInterface
 
     public function findByVerificationToken(string $token): ?ContactMessage
     {
-        if (!$this->isAvailable()) {
+        if (!$this->isAvailable() || $this->entityManager === null) {
             return null;
         }
 
+        /** @var T|null $entity */
         $entity = $this->entityManager->getRepository($this->entityClass)
             ->findOneBy(['verificationToken' => $token]);
         
@@ -121,11 +134,15 @@ class DoctrineStorage implements StorageInterface
             return null;
         }
 
-        if ($this->entityClass === ContactMessageEntity::class) {
+        if ($entity instanceof ContactMessageEntity) {
             return $entity->toModel();
         }
 
-        return $this->findById($entity->getId());
+        if (method_exists($entity, 'getId')) {
+            return $this->findById($entity->getId());
+        }
+        
+        return null;
     }
 
     public function isAvailable(): bool

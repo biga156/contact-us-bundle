@@ -9,10 +9,14 @@ use Caeligo\ContactUsBundle\Service\ContactSubmissionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class ContactController extends AbstractController
 {
+    /**
+     * @param array<string, mixed> $fieldsConfig
+     * @phpstan-ignore property.onlyWritten
+     */
     public function __construct(
         private ContactSubmissionService $submissionService,
         private array $fieldsConfig,

@@ -14,6 +14,9 @@ use Symfony\Component\Mime\Address;
  */
 class ContactMailer
 {
+    /**
+     * @param array<string> $recipients
+     */
     public function __construct(
         private MailerInterface $mailer,
         private array $recipients,
@@ -26,7 +29,7 @@ class ContactMailer
     /**
      * Send contact notification email
      * 
-     * @return array List of recipient addresses
+     * @return array<string> List of recipient addresses
      */
     public function send(ContactMessage $message): array
     {
@@ -63,6 +66,9 @@ class ContactMailer
         return $this->recipients;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function buildSubject(array $data): string
     {
         $subject = $this->subjectPrefix;

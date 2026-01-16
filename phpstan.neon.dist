@@ -1,0 +1,31 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    tmpDir: %currentWorkingDirectory%/.phpstan
+
+    # Exclude patterns
+    excludePaths:
+        - %currentWorkingDirectory%/vendor
+        - %currentWorkingDirectory%/tests/bootstrap.php
+
+    # Error suppression
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignore errors in tests directory for now
+    ignoreErrors:
+        # TemplatedEmail will be available when symfony/twig-bridge is installed by the user
+        -
+            message: '#Instantiated class Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail not found#'
+            path: src/Service/ContactMailer.php
+        -
+            message: '#Call to method from\(\) on an unknown class Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail#'
+            path: src/Service/ContactMailer.php
+        # fieldsConfig is used by Symfony DI container, not directly in code
+        -
+            message: '#Property Caeligo\\ContactUsBundle\\Controller\\ContactController::\$fieldsConfig is never read#'
+            path: src/Controller/ContactController.php

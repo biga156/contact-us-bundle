@@ -42,6 +42,9 @@ class ContactFormType extends AbstractType
         'Choice' => Assert\Choice::class,
     ];
 
+    /**
+     * @param array<string, array<string, mixed>> $fieldsConfig
+     */
     public function __construct(
         private array $fieldsConfig = []
     ) {
@@ -79,6 +82,10 @@ class ContactFormType extends AbstractType
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $config
+     * @return array<string, mixed>
+     */
     private function buildFieldOptions(array $config): array
     {
         $options = [
@@ -104,6 +111,10 @@ class ContactFormType extends AbstractType
         return $options;
     }
 
+    /**
+     * @param array<string, mixed> $constraintsConfig
+     * @return array<Constraint>
+     */
     private function buildConstraints(array $constraintsConfig): array
     {
         $constraints = [];

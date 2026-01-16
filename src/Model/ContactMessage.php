@@ -11,6 +11,7 @@ class ContactMessage
 {
     private ?int $id = null;
     private ?\DateTimeImmutable $createdAt = null;
+    /** @var array<string, mixed> */
     private array $data = [];
     private ?string $ipAddress = null;
     private ?string $userAgent = null;
@@ -45,11 +46,17 @@ class ContactMessage
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getData(): array
     {
         return $this->data;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function setData(array $data): self
     {
         $this->data = $data;

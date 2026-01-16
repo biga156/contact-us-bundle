@@ -30,15 +30,18 @@
         "symfony/form": "^6.4 || ^7.0",
         "symfony/validator": "^6.4 || ^7.0",
         "symfony/mailer": "^6.4 || ^7.0",
+        "symfony/twig-bridge": "^6.4 || ^7.0",
         "symfony/yaml": "^6.4 || ^7.0",
         "symfony/rate-limiter": "^6.4 || ^7.0",
         "symfony/cache": "^6.4 || ^7.0"
     },
     "require-dev": {
+        "doctrine/doctrine-bundle": "^2.11",
+        "doctrine/orm": "^2.14 || ^3.0",
+        "phpstan/extension-installer": "*",
+        "phpstan/phpstan": "*",
         "phpunit/phpunit": "^10.0 || ^11.0",
         "symfony/phpunit-bridge": "^6.4 || ^7.0",
-        "doctrine/orm": "^2.14 || ^3.0",
-        "doctrine/doctrine-bundle": "^2.11",
         "symfony/ux-live-component": "^2.0"
     },
     "suggest": {
