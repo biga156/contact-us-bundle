@@ -95,9 +95,6 @@ Visit `/contact` to see the form.
 - [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
 - [🌍 Translation Guide](docs/TRANSLATION.md) - **Multi-language support (optional)**
 - [🧪 Testing Guide](docs/TESTING.md) - **Unit, functional & integration tests**
-- [🔧 Storage Options](docs/STORAGE.md)
-- [🛡️ Spam Protection](docs/SPAM_PROTECTION.md)
-- [🔌 Events & Extension](docs/EVENTS.md)
 
 ## Template Customization
 

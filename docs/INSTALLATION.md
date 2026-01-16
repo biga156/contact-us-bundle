@@ -1,5 +1,20 @@
 # Installation Guide
 
+## Table of Contents
+
+1. [Requirements](#requirements)
+2. [Installation Steps](#installation-steps)
+   - [Install the Bundle](#1-install-the-bundle)
+   - [Configure the Bundle](#2-configure-the-bundle)
+   - [Import Routes](#3-import-routes)
+   - [Set Up Database Storage (Optional)](#4-optional-set-up-database-storage)
+   - [Configure AssetMapper (Optional)](#5-optional-configure-assetmapper)
+   - [Clear Cache](#6-clear-cache)
+3. [Verify Installation](#verify-installation)
+4. [Next Steps](#next-steps)
+
+---
+
 ## Requirements
 
 - PHP 8.2 or higher
@@ -94,7 +109,7 @@ Visit `/contact` in your browser. You should see the contact form.
 
 ## Next Steps
 
-- [Configure spam protection](SPAM_PROTECTION.md)
 - [Customize the form](CUSTOMIZATION.md)
-- [Handle events](EVENTS.md)
-- [Use the REST API](API.md)
+- [Configure translations](TRANSLATION.md)
+- [Write tests](TESTING.md)
+- [View all configuration options](CONFIGURATION.md)

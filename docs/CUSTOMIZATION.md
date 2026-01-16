@@ -9,6 +9,9 @@ This guide explains how to customize the Contact Us Bundle to match your applica
 3. [Custom Styling](#custom-styling)
 4. [Disabling Default Assets](#disabling-default-assets)
 5. [Form Theme Customization](#form-theme-customization)
+6. [Example: Complete Integration with Existing App](#example-complete-integration-with-existing-app)
+7. [Available Configuration Options](#available-configuration-options)
+8. [Need Help?](#need-help)
 
 ---
 
@@ -385,6 +388,7 @@ contact_us:
 
 ## Need Help?
 
-- Check the [README.md](README.md) for basic setup
-- See [INSTALLATION.md](docs/INSTALLATION.md) for installation instructions
-- View [CONFIGURATION.md](docs/CONFIGURATION.md) for all config options
+- Check the [README.md](../README.md) for basic setup
+- See [INSTALLATION.md](INSTALLATION.md) for installation instructions
+- View [CONFIGURATION.md](CONFIGURATION.md) for all config options
+- Read [TRANSLATION.md](TRANSLATION.md) for translation setup

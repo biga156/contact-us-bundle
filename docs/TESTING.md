@@ -1,5 +1,20 @@
 # Testing Guide
 
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Test Structure](#test-structure)
+3. [Running Tests](#running-tests)
+4. [Test Components](#test-components)
+5. [Current Test Status](#current-test-status)
+6. [Writing New Tests](#writing-new-tests)
+7. [Continuous Integration](#continuous-integration)
+8. [Code Coverage Goals](#code-coverage-goals)
+9. [Next Steps](#next-steps)
+10. [Resources](#resources)
+
+---
+
 ## Overview
 
 The ContactUsBundle includes comprehensive test coverage for all major components. Tests are organized into three categories:

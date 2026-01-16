@@ -2,6 +2,25 @@
 
 This guide explains how the ContactUsBundle handles translations and how to customize them.
 
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Default Behavior (Auto-Detect)](#default-behavior-auto-detect)
+3. [Installation](#installation)
+4. [Default Translations](#default-translations)
+5. [Customizing Translations](#customizing-translations)
+6. [Adding New Languages](#adding-new-languages)
+7. [Configuration Options](#configuration-options)
+8. [Using Custom Translation Filter](#using-custom-translation-filter)
+9. [Translation Keys Reference](#translation-keys-reference)
+10. [Examples](#examples)
+11. [Best Practices](#best-practices)
+12. [Troubleshooting](#troubleshooting)
+13. [Migration from Other Bundles](#migration-from-other-bundles)
+14. [See Also](#see-also)
+
+---
+
 ## Overview
 
 The bundle supports **optional translations** with automatic fallback:

@@ -2,6 +2,22 @@
 
 Complete configuration reference for ContactUsBundle.
 
+## Table of Contents
+
+1. [Basic Configuration](#basic-configuration)
+2. [All Options](#all-options)
+   - [recipients](#recipients-required)
+   - [subject_prefix](#subject_prefix)
+   - [storage](#storage)
+   - [spam_protection](#spam_protection)
+   - [fields](#fields)
+   - [api](#api)
+   - [email_verification](#email_verification)
+   - [mailer](#mailer)
+3. [Environment Variables](#environment-variables)
+
+---
+
 ## Basic Configuration
 
 ```yaml
