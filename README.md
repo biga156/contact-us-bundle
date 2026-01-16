@@ -94,6 +94,7 @@ Visit `/contact` to see the form.
 - [⚙️ Configuration Reference](docs/CONFIGURATION.md)
 - [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
 - [🌍 Translation Guide](docs/TRANSLATION.md) - **Multi-language support (optional)**
+- [🧪 Testing Guide](docs/TESTING.md) - **Unit, functional & integration tests**
 - [🔧 Storage Options](docs/STORAGE.md)
 - [🛡️ Spam Protection](docs/SPAM_PROTECTION.md)
 - [🔌 Events & Extension](docs/EVENTS.md)
@@ -128,6 +129,28 @@ contact_us:
 The bundle includes default translations in **English** and **Hungarian**. Add your own in `translations/contact_us.{locale}.yaml`.
 
 **See the [Translation Guide](docs/TRANSLATION.md) for complete documentation.**
+
+## Testing
+
+The bundle includes comprehensive test coverage:
+
+```bash
+# Run all tests
+./vendor/bin/phpunit
+
+# Run only unit tests
+./vendor/bin/phpunit --testsuite="Unit Tests"
+
+# Run with coverage
+XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-html coverage/
+```
+
+Test coverage includes:
+- ✅ **Unit tests** - Form validation, spam protection, storage, Twig extensions
+- ✅ **Functional tests** - Controller behavior, HTTP interactions (requires Symfony app)
+- ✅ **Integration tests** - Complete workflows (requires Symfony app)
+
+**See the [Testing Guide](docs/TESTING.md) for complete documentation.**
 
 ## License
 
