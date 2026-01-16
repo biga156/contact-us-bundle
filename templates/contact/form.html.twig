@@ -1,0 +1,60 @@
+{% extends '@ContactUs/base.html.twig' %}
+
+{% block title %}{{ 'contact.title'|trans }}{% endblock %}
+
+{% block contact_body %}
+<div class="contact-form-container">
+    <div class="contact-form-header">
+        <h1>{{ 'contact.title'|trans }}</h1>
+        <p>{{ 'contact.description'|trans }}</p>
+    </div>
+
+    {% for message in app.flashes('contact_success') %}
+        <div class="alert alert-success" role="alert">
+            {{ message|trans }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('contact_error') %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {{ form_start(form, {'attr': {'class': 'contact-form', 'novalidate': 'novalidate'}}) }}
+        <div class="contact-form-fields">
+            {% for field in form %}
+                {% if field.vars.name not in ['_token', 'email_confirm', '_form_token_time'] %}
+                    <div class="contact-form-field">
+                        {{ form_label(field) }}
+                        {{ form_widget(field, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(field) }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
+            {# Hidden honeypot field #}
+            <div class="contact-honeypot" aria-hidden="true">
+                {{ form_row(form.email_confirm, {
+                    'label': false,
+                    'attr': {
+                        'tabindex': '-1',
+                        'autocomplete': 'off'
+                    }
+                }) }}
+            </div>
+
+            {# Hidden timing token #}
+            {{ form_widget(form._form_token_time, {'attr': {'type': 'hidden'}}) }}
+        </div>
+
+        <div class="contact-form-submit">
+            <button type="submit" class="btn btn-primary">
+                {{ 'contact.submit'|trans }}
+            </button>
+        </div>
+
+        {{ form_row(form._token) }}
+    {{ form_end(form, {'render_rest': false}) }}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% block subject %}{{ subject }}{% endblock %}
+
+{% block body_text %}
+New contact form submission
+===========================
+
+{% if data.name is defined %}
+Name: {{ data.name }}
+{% endif %}
+
+{% if data.email is defined %}
+Email: {{ data.email }}
+{% endif %}
+
+{% if data.phone is defined %}
+Phone: {{ data.phone }}
+{% endif %}
+
+{% if data.subject is defined %}
+Subject: {{ data.subject }}
+{% endif %}
+
+{% if data.message is defined %}
+Message:
+--------
+{{ data.message }}
+{% endif %}
+
+{% if data|length > 0 %}
+
+Other fields:
+{% for key, value in data %}
+{% if key not in ['name', 'email', 'phone', 'subject', 'message'] %}
+{{ key }}: {{ value }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+---
+Submitted: {{ message.createdAt|date('Y-m-d H:i:s') }}
+IP Address: {{ message.ipAddress ?? 'Unknown' }}
+{% endblock %}

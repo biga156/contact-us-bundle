@@ -1,0 +1,17 @@
+contact:
+    title: 'Kapcsolat'
+    description: 'Töltse ki az alábbi űrlapot, és hamarosan válaszolunk.'
+    submit: 'Üzenet küldése'
+    
+    field:
+        name: 'Név'
+        email: 'E-mail cím'
+        phone: 'Telefonszám'
+        subject: 'Tárgy'
+        message: 'Üzenet'
+    
+    message:
+        success: 'Köszönjük üzenetét! Hamarosan válaszolunk.'
+        error: 'Hiba történt az üzenet küldése során. Kérjük, próbálja újra.'
+        rate_limit: 'Túl sok kérés. Kérjük, próbálja újra később.'
+        spam_detected: 'Az üzenete spam gyanúsnak lett jelölve. Kérjük, vegye fel velünk közvetlenül a kapcsolatot.'

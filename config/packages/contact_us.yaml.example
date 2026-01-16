@@ -1,0 +1,94 @@
+# Example Configuration for ContactUsBundle
+
+# Minimal configuration (email only)
+contact_us:
+    recipients: ['admin@example.com']
+
+---
+
+# Full configuration with all options
+contact_us:
+    # Email recipients (required)
+    recipients:
+        - 'admin@example.com'
+        - 'support@example.com'
+    
+    # Email subject prefix
+    subject_prefix: '[Contact Form]'
+    
+    # Storage mode: email, database, or both
+    storage: both  # default: email
+    
+    # Spam protection configuration
+    spam_protection:
+        # Protection level: 1=honeypot+rate limit, 2=+email verification, 3=+captcha
+        level: 1  # default: 1
+        
+        # Rate limiting
+        rate_limit:
+            limit: 3  # max submissions
+            interval: '15 minutes'
+        
+        # Minimum time between form load and submit (seconds)
+        min_submit_time: 3
+        
+        # Captcha configuration (level 3 only)
+        captcha:
+            provider: 'none'  # none, turnstile, hcaptcha, friendly, recaptcha
+            site_key: null
+            secret_key: null
+    
+    # Custom form fields
+    fields:
+        name:
+            type: text
+            required: true
+            label: 'contact.field.name'
+            constraints:
+                - NotBlank: ~
+                - Length: { max: 100 }
+        
+        email:
+            type: email
+            required: true
+            label: 'contact.field.email'
+            constraints:
+                - NotBlank: ~
+                - Email: ~
+        
+        phone:
+            type: tel
+            required: false
+            label: 'contact.field.phone'
+            constraints:
+                - Length: { max: 20 }
+        
+        subject:
+            type: text
+            required: false
+            label: 'contact.field.subject'
+            constraints:
+                - Length: { max: 200 }
+        
+        message:
+            type: textarea
+            required: true
+            label: 'contact.field.message'
+            constraints:
+                - NotBlank: ~
+                - Length: { min: 10, max: 5000 }
+    
+    # REST API configuration
+    api:
+        enabled: false
+        route_prefix: '/api/contact'
+    
+    # Email verification (level 2)
+    email_verification:
+        enabled: false
+        token_ttl: '1 hour'
+    
+    # Mailer configuration
+    mailer:
+        from_email: 'noreply@example.com'
+        from_name: 'Contact Form'

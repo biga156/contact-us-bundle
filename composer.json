@@ -1,0 +1,69 @@
+{
+    "name": "caeligo/contact-us-bundle",
+    "description": "A configurable Symfony bundle for contact forms with multiple UI variants (LiveComponent, plain form, REST API) and flexible storage options",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "bundle",
+        "contact",
+        "form",
+        "contact-us",
+        "live-component",
+        "api",
+        "captcha",
+        "honeypot",
+        "email"
+    ],
+    "authors": [
+        {
+            "name": "Bíró Gábor",
+            "email": "biga156@protonmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "symfony/framework-bundle": "^6.4 || ^7.0",
+        "symfony/console": "^6.4 || ^7.0",
+        "symfony/dependency-injection": "^6.4 || ^7.0",
+        "symfony/config": "^6.4 || ^7.0",
+        "symfony/form": "^6.4 || ^7.0",
+        "symfony/validator": "^6.4 || ^7.0",
+        "symfony/mailer": "^6.4 || ^7.0",
+        "symfony/yaml": "^6.4 || ^7.0",
+        "symfony/rate-limiter": "^6.4 || ^7.0",
+        "symfony/cache": "^6.4 || ^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0 || ^11.0",
+        "symfony/phpunit-bridge": "^6.4 || ^7.0",
+        "doctrine/orm": "^2.14 || ^3.0",
+        "doctrine/doctrine-bundle": "^2.11",
+        "symfony/ux-live-component": "^2.0"
+    },
+    "suggest": {
+        "doctrine/orm": "Required for database storage of contact messages",
+        "doctrine/doctrine-bundle": "Required for database storage integration",
+        "symfony/ux-live-component": "Required for LiveComponent UI variant",
+        "symfony/asset-mapper": "Recommended for asset management in Symfony 6.4+"
+    },
+    "autoload": {
+        "psr-4": {
+            "Caeligo\\ContactUsBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Caeligo\\ContactUsBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    },
+    "minimum-stability": "stable"
+}

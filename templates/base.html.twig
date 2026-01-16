@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Contact Us{% endblock %}</title>
+    
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('bundles/contactus/styles/contact.css') }}">
+    {% endblock %}
+</head>
+<body>
+    {% block body %}
+        {% block contact_body %}{% endblock %}
+    {% endblock %}
+
+    {% block javascripts %}
+        <script type="module" src="{{ asset('bundles/contactus/controllers/contact_controller.js') }}"></script>
+    {% endblock %}
+</body>
+</html>
