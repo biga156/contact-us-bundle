@@ -15,15 +15,17 @@ class ContactController extends AbstractController
 {
     public function __construct(
         private ContactSubmissionService $submissionService,
-        private array $fieldsConfig
+        private array $fieldsConfig,
+        private \Symfony\Component\Form\FormFactoryInterface $formFactory,
+        private \Symfony\Component\Routing\Generator\UrlGeneratorInterface $urlGenerator
     ) {
     }
 
     #[Route('/contact', name: 'contact_us_form', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
-        $form = $this->createForm(ContactFormType::class, null, [
-            'action' => $this->generateUrl('contact_us_form'),
+        $form = $this->formFactory->create(ContactFormType::class, null, [
+            'action' => $this->urlGenerator->generate('contact_us_form'),
         ]);
 
         $form->handleRequest($request);

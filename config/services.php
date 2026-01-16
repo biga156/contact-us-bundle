@@ -72,8 +72,9 @@ return static function (ContainerConfigurator $container): void {
     $services->set(ContactController::class)
         ->arg('$submissionService', service(ContactSubmissionService::class))
         ->arg('$fieldsConfig', param('contact_us.fields'))
-        ->tag('controller.service_arguments')
-        ->call('setContainer', [service('service_container')->ignoreOnInvalid()]);
+        ->arg('$formFactory', service('form.factory'))
+        ->arg('$urlGenerator', service('router'))
+        ->tag('controller.service_arguments');
 
     // Commands
     $services->set(SetupCommand::class)
