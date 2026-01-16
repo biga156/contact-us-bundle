@@ -37,10 +37,10 @@ class DoctrineStorage implements StorageInterface
             // Map ContactMessage data to custom entity
             // This assumes the entity has compatible properties/setters
             if (method_exists($entity, 'setData')) {
-                $entity->setData($message->data);
+                $entity->setData($message->getData());
             } else {
                 // Map individual fields if setData is not available
-                foreach ($message->data as $key => $value) {
+                foreach ($message->getData() as $key => $value) {
                     $setter = 'set' . str_replace('_', '', ucwords($key, '_'));
                     if (method_exists($entity, $setter)) {
                         $entity->$setter($value);
@@ -48,10 +48,10 @@ class DoctrineStorage implements StorageInterface
                 }
             }
             if (method_exists($entity, 'setIpAddress')) {
-                $entity->setIpAddress($message->ipAddress);
+                $entity->setIpAddress($message->getIpAddress());
             }
             if (method_exists($entity, 'setUserAgent')) {
-                $entity->setUserAgent($message->userAgent);
+                $entity->setUserAgent($message->getUserAgent());
             }
         }
 
@@ -84,22 +84,22 @@ class DoctrineStorage implements StorageInterface
         // For custom entities, create ContactMessage from entity
         $model = new ContactMessage();
         if (method_exists($entity, 'getData')) {
-            $model->data = $entity->getData() ?? [];
+            $model->setData($entity->getData() ?? []);
         } else {
             // Map individual properties to data array
-            $model->data = [
+            $model->setData([
                 'name' => $entity->getTitle() ?? '',
                 'email' => $entity->getEmail() ?? '',
                 'subject' => $entity->getSubtitle() ?? '',
                 'message' => $entity->getBody() ?? '',
                 'phone' => $entity->getPhone() ?? '',
-            ];
+            ]);
         }
         if (method_exists($entity, 'getIpAddress')) {
-            $model->ipAddress = $entity->getIpAddress();
+            $model->setIpAddress($entity->getIpAddress());
         }
         if (method_exists($entity, 'getUserAgent')) {
-            $model->userAgent = $entity->getUserAgent();
+            $model->setUserAgent($entity->getUserAgent());
         }
         if (method_exists($entity, 'getId')) {
             $model->setId($entity->getId());
