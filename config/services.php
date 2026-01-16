@@ -32,7 +32,8 @@ return static function (ContainerConfigurator $container): void {
     $services->set(NullStorage::class);
     
     $services->set(DoctrineStorage::class)
-        ->arg('$entityManager', service('doctrine.orm.entity_manager')->nullOnInvalid());
+        ->arg('$entityManager', service('doctrine.orm.entity_manager')->nullOnInvalid())
+        ->arg('$entityClass', param('contact_us.entity_class'));
 
     $services->alias(StorageInterface::class, DoctrineStorage::class)
         ->public();

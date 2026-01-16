@@ -36,6 +36,12 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue('email')
                 ->end()
 
+                // Entity class for custom entity mapping
+                ->scalarNode('entity_class')
+                    ->info('Custom entity class to use for persistence (defaults to Caeligo\ContactUsBundle\Entity\ContactMessageEntity)')
+                    ->defaultNull()
+                ->end()
+
                 // Spam protection configuration
                 ->arrayNode('spam_protection')
                     ->addDefaultsIfNotSet()
