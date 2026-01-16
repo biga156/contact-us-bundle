@@ -15,7 +15,13 @@
     {% endblock %}
 
     {% block javascripts %}
-        <script type="module" src="{{ asset('bundles/contactus/controllers/contact_controller.js') }}"></script>
+        {{ importmap('app') }}
+        <script type="module">
+            import { Application } from '@hotwired/stimulus';
+            import ContactController from '{{ asset('bundles/contactus/controllers/contact_controller.js') }}';
+            window.Stimulus = Application.start();
+            window.Stimulus.register('contact', ContactController);
+        </script>
     {% endblock %}
 </body>
 </html>
