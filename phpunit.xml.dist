@@ -1,24 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
          cacheDirectory=".phpunit.cache"
          executionOrder="depends,defects"
-         requireCoverageMetadata="true"
-         beStrictAboutCoverageMetadata="true"
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
          failOnWarning="true">
     <testsuites>
-        <testsuite name="ContactUsBundle Test Suite">
-            <directory>tests</directory>
+        <testsuite name="Unit Tests">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Functional Tests">
+            <directory>tests/Functional</directory>
+        </testsuite>
+        <testsuite name="Integration Tests">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
 
-    <source restrictDeprecations="true" restrictNotices="true" restrictWarnings="true">
+    <source>
         <include>
             <directory>src</directory>
         </include>
+        <exclude>
+            <directory>src/Command</directory>
+        </exclude>
     </source>
+
+    <php>
+        <ini name="display_errors" value="1" />
+        <ini name="error_reporting" value="-1" />
+        <server name="APP_ENV" value="test" force="true" />
+        <server name="SHELL_VERBOSITY" value="-1" />
+    </php>
 </phpunit>
