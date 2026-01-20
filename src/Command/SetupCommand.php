@@ -14,6 +14,7 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
 #[AsCommand(
@@ -38,6 +39,44 @@ class SetupCommand extends Command
         $this->io->title('ContactUs Bundle Setup Wizard');
         $this->io->text('This wizard will help you configure the contact form bundle.');
 
+        // Non-interactive mode: accept defaults and skip questions
+        if (!$input->isInteractive()) {
+            $config = $this->buildNonInteractiveConfig();
+
+            $this->saveConfiguration($config);
+
+            $this->io->success('ContactUs bundle configuration saved successfully (non-interactive).');
+            $this->io->info('Configuration file: config/packages/contact_us.yaml');
+            $this->io->section('Next Steps');
+            $this->io->listing([
+                'Import routes: Add contact_us resource to config/routes.yaml (optional prefix supported)',
+                'Run cache:clear to apply changes',
+                'Generate and run database migrations (since bundle entity is selected):',
+                '  php bin/console make:migration',
+                '  php bin/console doctrine:migrations:migrate',
+            ]);
+
+            return Command::SUCCESS;
+        }
+
+        // Check for existing configuration
+        $configFile = $this->projectDir . '/config/packages/contact_us.yaml';
+        $previousConfig = null;
+
+        if (file_exists($configFile)) {
+            $this->io->section('Existing Configuration Found');
+            $this->io->info('Configuration file already exists at: ' . $configFile);
+            
+            if (!$this->io->confirm('Would you like to update the existing configuration?', false)) {
+                $this->io->info('Setup cancelled. Your existing configuration remains unchanged.');
+                return Command::SUCCESS;
+            }
+
+            // Load previous config for comparison
+            $previousConfig = Yaml::parseFile($configFile);
+            $this->io->info('Previous configuration will be updated.');
+        }
+
         $config = [];
 
         // Step 1: Email recipients
@@ -47,10 +86,12 @@ class SetupCommand extends Command
         $config['storage'] = $this->askStorageMode();
 
         // Step 3: If database, ask about table/entity
+        $usingBundleEntity = false;
         if (in_array($config['storage'], ['database', 'both'], true)) {
             $entityConfig = $this->askEntityConfiguration();
             if ($entityConfig) {
                 $config['entity'] = $entityConfig;
+                $usingBundleEntity = !($entityConfig['use_existing'] ?? false);
             }
         }
 
@@ -68,11 +109,28 @@ class SetupCommand extends Command
 
         $this->io->success('ContactUs bundle configuration saved successfully!');
         $this->io->info('Configuration file: config/packages/contact_us.yaml');
-        $this->io->info('Next steps:');
+        
+        // Handle migrations if using bundle's own entity
+        if ($usingBundleEntity) {
+            if ($this->io->confirm('Would you like to generate and run migrations now?', true)) {
+                $this->handleMigrations();
+            } else {
+                $this->io->section('Migration Required');
+                $this->io->warning('You selected to use the bundle\'s own entity, which requires database migrations.');
+                $this->io->listing([
+                    'php bin/console make:migration',
+                    'php bin/console doctrine:migrations:migrate',
+                ]);
+            }
+        } elseif (isset($config['entity']) && ($config['entity']['use_existing'] ?? false)) {
+            $this->io->section('No Migration Needed');
+            $this->io->info('You selected an existing entity - no migration needed.');
+        }
+        
+        $this->io->section('Next Steps');
         $this->io->listing([
             'Import routes: Add contact_us resource to config/routes.yaml',
             'Run cache:clear to apply changes',
-            'If using database storage, run doctrine:migrations:diff and migrate',
         ]);
 
         return Command::SUCCESS;
@@ -394,7 +452,9 @@ class SetupCommand extends Command
             $existingFrom ? "'%env(CONTACT_EMAIL)%'" : null
         );
 
-        $fromName = $this->io->ask('From name', 'Contact Form');
+        $this->io->writeln('');
+        $this->io->writeln('<fg=cyan>From name</> - The sender name displayed in recipient\'s email client');
+        $fromName = $this->io->ask('From name (e.g., "My Website" or "Support Team")', 'Contact Form');
 
         $subjectPrefix = $this->io->ask('Email subject prefix', '[Contact Form]');
 
@@ -403,6 +463,101 @@ class SetupCommand extends Command
             'from_name' => $fromName,
             'subject_prefix' => $subjectPrefix,
         ];
+    }
+
+    /**
+     * Build default configuration in non-interactive mode
+     *
+     * @return array<string, mixed>
+     */
+    private function buildNonInteractiveConfig(): array
+    {
+        // Ensure CONTACT_EMAIL exists in .env
+        $envEmail = $_ENV['CONTACT_EMAIL'] ?? null;
+        $envFile = $this->projectDir . '/.env';
+        if ($envEmail === null) {
+            $defaultEmail = 'postmaster@example.com';
+            // Append to .env if not present
+            if (file_exists($envFile)) {
+                $contents = file_get_contents($envFile) ?: '';
+                if (strpos($contents, 'CONTACT_EMAIL=') === false) {
+                    file_put_contents($envFile, "\nCONTACT_EMAIL={$defaultEmail}\n", FILE_APPEND);
+                }
+            } else {
+                file_put_contents($envFile, "CONTACT_EMAIL={$defaultEmail}\n");
+            }
+        }
+
+        // Defaults
+        $config = [];
+        $config['recipients'] = ["'%env(CONTACT_EMAIL)%'"];
+        $config['storage'] = 'both';
+        $config['entity'] = [
+            'use_existing' => false,
+            'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity',
+        ];
+        $config['fields'] = $this->getDefaultFields();
+        $config['spam_protection'] = [
+            'level' => 1,
+            'rate_limit' => [
+                'limit' => 3,
+                'interval' => '15 minutes',
+            ],
+            'min_submit_time' => 3,
+        ];
+        $config['mailer'] = [
+            'from_email' => "'%env(CONTACT_EMAIL)%'",
+            'from_name' => 'Contact Form',
+            'subject_prefix' => '[Contact Form]',
+        ];
+
+        return $config;
+    }
+
+    /**
+     * Handle database migrations interactively
+     */
+    private function handleMigrations(): void
+    {
+        $this->io->section('Generating Migration');
+        
+        try {
+            // Run make:migration
+            $process = new Process(
+                ['php', 'bin/console', 'make:migration', '--no-interaction'],
+                $this->projectDir
+            );
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                $this->io->success('Migration generated successfully!');
+                
+                // Run migrations
+                $this->io->section('Running Migrations');
+                $migrateProcess = new Process(
+                    ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction'],
+                    $this->projectDir
+                );
+                $migrateProcess->run();
+
+                if ($migrateProcess->isSuccessful()) {
+                    $this->io->success('Migrations executed successfully!');
+                } else {
+                    $this->io->error('Migration execution failed:');
+                    $this->io->writeln($migrateProcess->getErrorOutput());
+                }
+            } else {
+                $this->io->warning('No migrations to generate, or migration generation skipped.');
+                $this->io->writeln($process->getErrorOutput());
+            }
+        } catch (\Exception $e) {
+            $this->io->error('Error during migration: ' . $e->getMessage());
+            $this->io->warning('Please run migrations manually:');
+            $this->io->listing([
+                'php bin/console make:migration',
+                'php bin/console doctrine:migrations:migrate',
+            ]);
+        }
     }
 
     /**
@@ -432,12 +587,9 @@ class SetupCommand extends Command
             ],
         ];
 
-        // Add entity configuration if exists
-        if (isset($config['entity'])) {
-            $yamlConfig['contact_us']['entity'] = [
-                'use_existing' => $config['entity']['use_existing'],
-                'class' => $config['entity']['class'],
-            ];
+        // Add entity class if using bundle's own entity
+        if (isset($config['entity']) && !($config['entity']['use_existing'] ?? false)) {
+            $yamlConfig['contact_us']['entity_class'] = $config['entity']['class'];
         }
 
         $yaml = Yaml::dump($yamlConfig, 4, 2);

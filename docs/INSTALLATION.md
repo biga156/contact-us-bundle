@@ -64,9 +64,21 @@ Add to `config/routes.yaml`:
 ```yaml
 contact_us:
     resource: '@ContactUsBundle/config/routes.php'
+    type: php
 ```
 
 This will register the `/contact` route.
+
+**Optional: Route Prefix**
+
+If you need to avoid route conflicts (e.g., if your application already has contact-related routes), you can add a prefix:
+
+```yaml
+contact_us:
+    resource: '@ContactUsBundle/config/routes.php'
+    type: php
+    prefix: /contact-form  # or any prefix you prefer
+```
 
 ### 4. (Optional) Set Up Database Storage
 

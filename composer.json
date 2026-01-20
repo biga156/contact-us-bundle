@@ -32,6 +32,7 @@
         "symfony/mailer": "^6.4 || ^7.0",
         "symfony/twig-bridge": "^6.4 || ^7.0",
         "symfony/yaml": "^6.4 || ^7.0",
+        "symfony/process": "^6.4 || ^7.0",
         "symfony/rate-limiter": "^6.4 || ^7.0",
         "symfony/cache": "^6.4 || ^7.0"
     },
@@ -62,7 +63,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     },
     "extra": {
         "branch-alias": {

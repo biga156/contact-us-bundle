@@ -36,7 +36,23 @@ composer require caeligo/contact-us-bundle
 
 The bundle will be automatically registered via Symfony Flex.
 
+After install, run the setup wizard to generate `config/packages/contact_us.yaml` (and optionally migrations if you pick the bundle entity):
+
+```bash
+php bin/console contact:setup
+```
+
+Tip: use `--no-interaction` to accept safe defaults when scripting CI/bootstrap.
+
 ## Quick Start
+
+### 0. Run the Setup Wizard (recommended)
+
+```bash
+php bin/console contact:setup
+```
+
+This writes your base configuration and can create migrations if you choose the bundle's entity.
 
 ### 1. Configure the Bundle
 

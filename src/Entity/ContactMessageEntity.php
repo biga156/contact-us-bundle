@@ -13,9 +13,9 @@ use Doctrine\ORM\Mapping as ORM;
  * This is optional and only used when storage mode includes 'database'
  */
 #[ORM\Entity]
-#[ORM\Table(name: 'contact_message')]
-#[ORM\Index(columns: ['created_at'], name: 'idx_contact_created')]
-#[ORM\Index(columns: ['verification_token'], name: 'idx_contact_verification')]
+#[ORM\Table(name: 'cg_contact_message')]
+#[ORM\Index(columns: ['created_at'], name: 'idx_cg_contact_created')]
+#[ORM\Index(columns: ['verification_token'], name: 'idx_cg_contact_verification')]
 class ContactMessageEntity
 {
     #[ORM\Id]
