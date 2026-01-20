@@ -614,7 +614,16 @@ class SetupCommand extends Command
                     if (empty($constraintOptions)) {
                         $yaml .= "        - {$constraintName}: {  }\n";
                     } else {
-                        $yaml .= "        - {$constraintName}: " . Yaml::dump($constraintOptions, 1, 2) . "";
+                        $yaml .= "        - {$constraintName}: { ";
+                        $parts = [];
+                        foreach ($constraintOptions as $key => $value) {
+                            if (is_string($value)) {
+                                $parts[] = "{$key}: '{$value}'";
+                            } else {
+                                $parts[] = "{$key}: {$value}";
+                            }
+                        }
+                        $yaml .= implode(', ', $parts) . " }\n";
                     }
                 }
             }
@@ -696,6 +705,9 @@ class SetupCommand extends Command
     private function clearCacheAndCompileAssets(): void
     {
         try {
+            $this->io->writeln('');
+            $this->io->writeln('<comment>Clearing cache...</comment>');
+            
             // Clear cache
             $clearCacheProcess = new Process(
                 ['php', 'bin/console', 'cache:clear', '--no-warmup'],
@@ -704,10 +716,14 @@ class SetupCommand extends Command
             $clearCacheProcess->run();
 
             if ($clearCacheProcess->isSuccessful()) {
-                $this->io->writeln('<info>✓ Cache cleared</info>');
+                $this->io->writeln('<info>✓ Cache cleared successfully</info>');
+            } else {
+                $this->io->writeln('<error>✗ Cache clear failed:</error>');
+                $this->io->writeln($clearCacheProcess->getErrorOutput());
             }
 
             // Try to compile assets if AssetMapper is available
+            $this->io->writeln('<comment>Compiling assets...</comment>');
             $assetCompileProcess = new Process(
                 ['php', 'bin/console', 'asset-map:compile', '--force'],
                 $this->projectDir
@@ -715,10 +731,15 @@ class SetupCommand extends Command
             $assetCompileProcess->run();
 
             if ($assetCompileProcess->isSuccessful()) {
-                $this->io->writeln('<info>✓ Assets compiled</info>');
+                $this->io->writeln('<info>✓ Assets compiled successfully</info>');
+            } else {
+                // Asset compilation is optional, don't show error if command doesn't exist
+                if (strpos($assetCompileProcess->getErrorOutput(), 'There are no commands') === false) {
+                    $this->io->writeln('<comment>Note: Asset compilation skipped (AssetMapper not available)</comment>');
+                }
             }
         } catch (\Exception $e) {
-            $this->io->writeln('<comment>Note: Cache/asset operations completed with warnings</comment>');
+            $this->io->error('Cache/asset operations failed: ' . $e->getMessage());
         }
     }
 }
