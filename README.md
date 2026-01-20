@@ -41,18 +41,11 @@ After install, run the setup wizard to generate `config/packages/contact_us.yaml
 ```bash
 php bin/console contact:setup
 ```
+This writes your base configuration and can create migrations if you choose the bundle's entity.
 
 Tip: use `--no-interaction` to accept safe defaults when scripting CI/bootstrap.
 
 ## Quick Start
-
-### 0. Run the Setup Wizard (recommended)
-
-```bash
-php bin/console contact:setup
-```
-
-This writes your base configuration and can create migrations if you choose the bundle's entity.
 
 ### 1. Configure the Bundle
 
