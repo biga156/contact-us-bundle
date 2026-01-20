@@ -36,33 +36,53 @@ composer require caeligo/contact-us-bundle
 
 The bundle will be automatically registered via Symfony Flex.
 
-After install, run the setup wizard to generate `config/packages/contact_us.yaml` (and optionally migrations if you pick the bundle entity):
+**Run the interactive setup wizard:**
 
 ```bash
 php bin/console contact:setup
 ```
-This writes your base configuration and can create migrations if you choose the bundle's entity.
 
-Tip: use `--no-interaction` to accept safe defaults when scripting CI/bootstrap.
+The wizard automatically:
+- Generates `config/packages/contact_us.yaml` with inline comments
+- Imports routes to `config/routes.yaml` (adapts to your locale prefixes)
+- Clears cache and compiles assets
+- Optionally creates and runs database migrations
+
+**Tip:** Use `--no-interaction` to accept safe defaults when scripting CI/bootstrap.
 
 ## Quick Start
 
-### 1. Configure the Bundle
+### 1. Run the Setup Wizard (recommended)
+
+```bash
+php bin/console contact:setup
+```
+
+The wizard will:
+- Generate `config/packages/contact_us.yaml` with inline documentation
+- Automatically import routes to `config/routes.yaml` (adapts to locale prefixes)
+- Clear cache and compile assets
+- Optionally create and run migrations (if you choose the bundle's entity)
+
+After setup completes, visit `/contact` to see the form.
+
+### 2. Or Use LiveComponent (no route import needed)
+
+```twig
+{# templates/contact/index.html.twig #}
+{{ component('ContactUs') }}
+```
+
+### 3. Customize Configuration (optional)
+
+Edit `config/packages/contact_us.yaml` to adjust recipients, storage, spam protection, and fields:
 
 ```yaml
-# config/packages/contact_us.yaml
 contact_us:
     recipients: ['admin@example.com']
     storage: email  # email|database|both
     spam_protection:
         level: 1  # 1=honeypot+rate limit, 2=+email verification, 3=+captcha provider
-```
-
-### 2. Add Form Fields (Optional)
-
-```yaml
-# config/packages/contact_us.yaml
-contact_us:
     fields:
         name:
             type: text
@@ -79,23 +99,6 @@ contact_us:
             constraints:
                 - Length: { min: 10, max: 5000 }
 ```
-
-### 3. Use LiveComponent (Recommended)
-
-```twig
-{# templates/contact/index.html.twig #}
-{{ component('ContactUs') }}
-```
-
-### 4. Or Use Plain Form
-
-```yaml
-# config/routes.yaml
-contact_us_routes:
-    resource: '@ContactUsBundle/config/routes.yaml'
-```
-
-Visit `/contact` to see the form.
 
 ## Documentation
 
