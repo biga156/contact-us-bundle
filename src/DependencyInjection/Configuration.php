@@ -138,6 +138,15 @@ class Configuration implements ConfigurationInterface
                                 ['Email' => []],
                             ],
                         ],
+                        'subject' => [
+                            'type' => 'text',
+                            'required' => true,
+                            'label' => 'contact.field.subject',
+                            'constraints' => [
+                                ['NotBlank' => []],
+                                ['Length' => ['max' => 200]],
+                            ],
+                        ],
                         'message' => [
                             'type' => 'textarea',
                             'required' => true,
@@ -191,6 +200,10 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('from_name')
                             ->info('From name for notifications')
                             ->defaultValue('Contact Form')
+                        ->end()
+                        ->booleanNode('send_copy_to_sender')
+                            ->info('Also send the notification email to the sender address')
+                            ->defaultFalse()
                         ->end()
                     ->end()
                 ->end()

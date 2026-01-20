@@ -91,6 +91,7 @@ class ContactFormType extends AbstractType
         $options = [
             'required' => $config['required'] ?? false,
             'label' => $config['label'] ?? null,
+            'translation_domain' => 'contact_us',
             'attr' => $config['options']['attr'] ?? [],
         ];
 

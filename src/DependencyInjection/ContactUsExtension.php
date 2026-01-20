@@ -26,6 +26,9 @@ class ContactUsExtension extends Extension
         $container->setParameter('contact_us.api', $config['api']);
         $container->setParameter('contact_us.email_verification', $config['email_verification']);
         $container->setParameter('contact_us.mailer', $config['mailer']);
+        $container->setParameter('contact_us.mailer.from_email', $config['mailer']['from_email'] ?? ($_ENV['CONTACT_EMAIL'] ?? null));
+        $container->setParameter('contact_us.mailer.from_name', $config['mailer']['from_name']);
+        $container->setParameter('contact_us.mailer.send_copy_to_sender', $config['mailer']['send_copy_to_sender'] ?? false);
         $container->setParameter('contact_us.templates', $config['templates']);
         $container->setParameter('contact_us.design', $config['design']);
         $container->setParameter('contact_us.translation', $config['translation']);

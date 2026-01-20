@@ -9,18 +9,18 @@
 #}
 {% extends contact_us_config.templates.base|default('@ContactUs/base.html.twig') %}
 
-{% block title %}{{ 'contact.title'|trans }}{% endblock %}
+{% block title %}{{ 'contact.title'|contact_trans }}{% endblock %}
 
 {% block contact_body %}
 <div class="contact-form-container">
     <div class="contact-form-header">
-        <h1>{{ 'contact.title'|trans }}</h1>
-        <p>{{ 'contact.description'|trans }}</p>
+        <h1>{{ 'contact.title'|contact_trans }}</h1>
+        <p>{{ 'contact.description'|contact_trans }}</p>
     </div>
 
     {% for message in app.flashes('contact_success') %}
         <div class="alert alert-success" role="alert">
-            {{ message|trans }}
+            {{ message|contact_trans }}
         </div>
     {% endfor %}
 
@@ -31,11 +31,15 @@
     {% endfor %}
 
     {{ form_start(form, {'attr': {'class': 'contact-form', 'novalidate': 'novalidate', 'data-controller': 'contact'}}) }}
+        {% if form._form_token_time is defined and not form._form_token_time.rendered %}
+            {{ form_widget(form._form_token_time, {'type': 'hidden', 'attr': {'class': 'contact-timing-token', 'style': 'display:none'}}) }}
+        {% endif %}
+
         <div class="contact-form-fields">
             {% for field in form %}
                 {% if field.vars.name not in ['_token', 'email_confirm', '_form_token_time'] %}
                     <div class="contact-form-field">
-                        {{ form_label(field) }}
+                        {{ form_label(field, field.vars.label|contact_trans) }}
                         {{ form_widget(field, {'attr': {'class': 'form-control'}}) }}
                         {{ form_errors(field) }}
                     </div>
@@ -52,14 +56,11 @@
                     }
                 }) }}
             </div>
-
-            {# Hidden timing token #}
-            {{ form_widget(form._form_token_time, {'attr': {'type': 'hidden', 'class': 'contact-timing-token'}}) }}
         </div>
 
         <div class="contact-form-submit">
-            <button type="submit" class="btn btn-primary" data-contact-target="submit" data-loading-text="{{ 'contact.submit_loading'|trans }}">
-                {{ 'contact.submit'|trans }}
+            <button type="submit" class="btn btn-primary" data-contact-target="submit" data-loading-text="{{ 'contact.submit_loading'|contact_trans }}">
+                {{ 'contact.submit'|contact_trans }}
             </button>
         </div>
 

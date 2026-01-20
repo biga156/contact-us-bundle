@@ -57,8 +57,11 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$mailer', service('mailer'))
         ->arg('$recipients', param('contact_us.recipients'))
         ->arg('$subjectPrefix', param('contact_us.subject_prefix'))
-        ->arg('$fromEmail', null)
-        ->arg('$fromName', 'Contact Form');
+        ->arg('$fromEmail', param('contact_us.mailer.from_email'))
+        ->arg('$fromName', param('contact_us.mailer.from_name'))
+        ->arg('$enableAutoReply', false)
+        ->arg('$autoReplyFrom', param('contact_us.mailer.from_email'))
+        ->arg('$sendCopyToSender', param('contact_us.mailer.send_copy_to_sender'));
 
     // Submission Service
     $services->set(ContactSubmissionService::class)

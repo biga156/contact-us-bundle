@@ -1,0 +1,45 @@
+{% block subject %}Thank you for contacting us{% endblock %}
+
+{% block body_text %}
+Thank you for contacting us
+===========================
+
+Dear {% if data.name is defined %}{{ data.name }}{% else %}valued customer{% endif %},
+
+We have received your message and will get back to you as soon as possible. 
+A member of our team will review your inquiry and respond shortly.
+
+Summary of your message:
+------------------------
+
+{% if data.name is defined %}
+Name: {{ data.name }}
+{% endif %}
+
+{% if data.email is defined %}
+Email: {{ data.email }}
+{% endif %}
+
+{% if data.phone is defined %}
+Phone: {{ data.phone }}
+{% endif %}
+
+{% if data.subject is defined %}
+Subject: {{ data.subject }}
+{% endif %}
+
+{% if data.message is defined %}
+Message:
+{{ data.message }}
+{% endif %}
+
+{% for key, value in data %}
+{% if key not in ['name', 'email', 'phone', 'subject', 'message'] %}
+{{ key|title }}: {{ value }}
+{% endif %}
+{% endfor %}
+
+---
+This is an automated message. Please do not reply directly to this email.
+If you have any questions, please contact us through our website.
+{% endblock %}

@@ -19,6 +19,30 @@ This guide explains how to customize the Contact Us Bundle to match your applica
 
 Following Symfony's standard mechanism, you can override any bundle template by creating templates in your application's `templates/bundles/` directory.
 
+If you only need to change which fields are rendered (add/remove/relabel) prefer configuration first:
+
+```yaml
+# config/packages/contact_us.yaml
+contact_us:
+    fields:
+        name:
+            label: 'Your name'
+        message:
+            label: 'Your message'
+        company:
+            type: text
+            required: false
+            label: 'Company'
+```
+
+If you need full control of the markup/order, copy the form template to your app:
+
+```
+templates/bundles/ContactUsBundle/contact/form.html.twig
+```
+
+and adjust the loop. Keep the hidden fields (`email_confirm`, `_form_token_time`, `_token`) for spam protection and CSRF.
+
 ### Directory Structure
 
 ```

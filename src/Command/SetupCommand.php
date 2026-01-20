@@ -296,7 +296,7 @@ class SetupCommand extends Command
         }
 
         // Manual field configuration
-        $this->io->info('Using default fields (name, email, message).');
+        $this->io->info('Using default fields (name, email, subject, message).');
         $useDefaults = $this->io->confirm('Use default field configuration?', true);
 
         if ($useDefaults) {
@@ -406,6 +406,15 @@ class SetupCommand extends Command
                     ['Email' => []],
                 ],
             ],
+            'subject' => [
+                'type' => 'text',
+                'required' => true,
+                'label' => 'contact.field.subject',
+                'constraints' => [
+                    ['NotBlank' => []],
+                    ['Length' => ['max' => 200]],
+                ],
+            ],
             'message' => [
                 'type' => 'textarea',
                 'required' => true,
@@ -425,15 +434,20 @@ class SetupCommand extends Command
     {
         $this->io->section('Spam Protection');
 
-        $level = (int) $this->io->choice(
+        $choices = [
+            'Level 1: Honeypot + Rate limiting (recommended)',
+            'Level 2: Level 1 + Email verification',
+            'Level 3: Level 2 + Third-party captcha',
+        ];
+
+        $selectedIndex = $this->io->choice(
             'Select spam protection level',
-            [
-                1 => 'Level 1: Honeypot + Rate limiting (recommended)',
-                2 => 'Level 2: Level 1 + Email verification',
-                3 => 'Level 3: Level 2 + Third-party captcha',
-            ],
-            1
+            $choices,
+            $choices[0]  // Default to first option
         );
+
+        // Map choice back to level number (1, 2, or 3)
+        $level = array_search($selectedIndex, $choices, true) + 1;
 
         return [
             'level' => $level,
@@ -465,10 +479,13 @@ class SetupCommand extends Command
 
         $subjectPrefix = $this->io->ask('Email subject prefix', '[Contact Form]');
 
+        $sendCopyToSender = $this->io->confirm('Send a copy of the message to the sender email address?', false);
+
         return [
             'from_email' => $fromEmail,
             'from_name' => $fromName,
             'subject_prefix' => $subjectPrefix,
+            'send_copy_to_sender' => $sendCopyToSender,
         ];
     }
 
@@ -516,6 +533,7 @@ class SetupCommand extends Command
             'from_email' => "'%env(CONTACT_EMAIL)%'",
             'from_name' => 'Contact Form',
             'subject_prefix' => '[Contact Form]',
+            'send_copy_to_sender' => false,
         ];
 
         return $config;
@@ -632,6 +650,7 @@ class SetupCommand extends Command
         $yaml .= "  mailer:\n";
         $yaml .= "    from_email: " . $config['mailer']['from_email'] . "\n";
         $yaml .= "    from_name: '" . $config['mailer']['from_name'] . "'\n";
+        $yaml .= "    send_copy_to_sender: " . ($config['mailer']['send_copy_to_sender'] ? 'true' : 'false') . "\n";
 
         // Add entity class if using bundle's own entity
         if (isset($config['entity']) && !($config['entity']['use_existing'] ?? false)) {

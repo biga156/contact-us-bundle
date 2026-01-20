@@ -29,6 +29,8 @@ The bundle supports **optional translations** with automatic fallback:
 - ❌ **No translation component** → Falls back to plain text labels
 - 🔧 **Configurable** → Force enable/disable via config
 
+When translations are disabled or missing, the Twig `contact_trans` filter renders readable English labels by default. If you prefer another language without enabling Symfony Translation, adjust the provided `translations/contact_us.en.yaml` (or add your own file) or override labels directly in `contact_us.fields`.
+
 ## Default Behavior (Auto-Detect)
 
 The bundle automatically detects if `symfony/translation` is available:

@@ -22,7 +22,10 @@ class ContactMailer
         private array $recipients,
         private string $subjectPrefix = '[Contact Form]',
         private ?string $fromEmail = null,
-        private string $fromName = 'Contact Form'
+        private string $fromName = 'Contact Form',
+        private bool $enableAutoReply = false,
+        private ?string $autoReplyFrom = null,
+        private bool $sendCopyToSender = false
     ) {
     }
 
@@ -38,7 +41,7 @@ class ContactMailer
 
         $email = (new TemplatedEmail())
             ->from(new Address(
-                $this->fromEmail ?? $data['email'] ?? 'noreply@example.com',
+                $this->resolveFromEmail($data),
                 $this->fromName
             ))
             ->subject($subject)
@@ -55,6 +58,11 @@ class ContactMailer
             $email->addTo($recipient);
         }
 
+        // Optionally send the same notification to the sender
+        if ($this->sendCopyToSender && !empty($data['email'])) {
+            $email->addCc(new Address($data['email'], $data['name'] ?? ''));
+        }
+
         // Set reply-to if email is provided in form
         if (!empty($data['email'])) {
             $replyToName = $data['name'] ?? '';
@@ -63,7 +71,40 @@ class ContactMailer
 
         $this->mailer->send($email);
 
+        // Send auto-reply to sender if enabled
+        if ($this->enableAutoReply && !empty($data['email'])) {
+            $this->sendAutoReply($message);
+        }
+
         return $this->recipients;
+    }
+
+    /**
+     * Send auto-reply confirmation email to the form sender
+     */
+    private function sendAutoReply(ContactMessage $message): void
+    {
+        $data = $message->getData();
+        
+        if (empty($data['email'])) {
+            return;
+        }
+
+        $autoReply = (new TemplatedEmail())
+            ->from(new Address(
+                $this->autoReplyFrom ?? $this->resolveFromEmail($data),
+                $this->fromName
+            ))
+            ->to(new Address($data['email'], $data['name'] ?? ''))
+            ->subject('Thank you for contacting us')
+            ->htmlTemplate('@ContactUs/email/contact_auto_reply.html.twig')
+            ->textTemplate('@ContactUs/email/contact_auto_reply.txt.twig')
+            ->context([
+                'message' => $message,
+                'data' => $data,
+            ]);
+
+        $this->mailer->send($autoReply);
     }
 
     /**
@@ -83,5 +124,16 @@ class ContactMailer
         }
 
         return $subject;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function resolveFromEmail(array $data): string
+    {
+        $candidate = $this->fromEmail ?: ($data['email'] ?? null);
+
+        // Fallback to sensible default to avoid invalid sender
+        return $candidate ?: 'noreply@example.com';
     }
 }
