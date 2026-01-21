@@ -48,7 +48,10 @@ Create configuration file `config/packages/contact_us.yaml`:
 
 ```yaml
 contact_us:
+    storage: email  # email|database|both
     recipients: ['%env(CONTACT_EMAIL)%']
+
+# Recipients are only required when storage is email or both.
 ```
 
 Add to your `.env` file:
@@ -88,6 +91,7 @@ If you want to save contact messages to database:
 # config/packages/contact_us.yaml
 contact_us:
     storage: database  # or 'both' for email + database
+    recipients: []      # recipients not needed for database-only
 ```
 
 Create migration:
@@ -96,6 +100,8 @@ Create migration:
 php bin/console make:migration
 php bin/console doctrine:migrations:migrate
 ```
+
+If you use the bundle's entity, the setup wizard will import an admin CRUD at `/contact/messages`. If you select your own existing entity, no CRUD routes are imported—wire your own controller or extend the bundle's abstract CRUD controller if desired.
 
 ### 5. (Optional) Configure AssetMapper
 

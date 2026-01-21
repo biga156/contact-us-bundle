@@ -1,0 +1,39 @@
+{% extends contact_us_config.templates.base|default('@ContactUs/base.html.twig') %}
+
+{% block title %}Contact Message #{{ message.id }}{% endblock %}
+
+{% block contact_body %}
+<div class="contact-admin-container">
+    <div class="contact-admin-header">
+        <h1>Message #{{ message.id }}</h1>
+        <p>Submitted {{ message.createdAt ? message.createdAt|date('Y-m-d H:i') : '' }}</p>
+    </div>
+
+    <dl class="contact-admin-details">
+        <dt>Name</dt>
+        <dd>{{ message.get('name') }}</dd>
+
+        <dt>Email</dt>
+        <dd>{{ message.get('email') }}</dd>
+
+        <dt>Subject</dt>
+        <dd>{{ message.get('subject') }}</dd>
+
+        <dt>Message</dt>
+        <dd><pre class="contact-admin-message">{{ message.get('message') }}</pre></dd>
+
+        <dt>IP address</dt>
+        <dd>{{ message.ipAddress }}</dd>
+
+        <dt>User agent</dt>
+        <dd>{{ message.userAgent }}</dd>
+    </dl>
+
+    <div class="contact-admin-actions">
+        <a class="btn btn-secondary" href="{{ path('contact_us_admin_index') }}">Back</a>
+        <form method="post" action="{{ path('contact_us_admin_delete', { id: message.id }) }}" style="display:inline" onsubmit="return confirm('Delete this message?');">
+            <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

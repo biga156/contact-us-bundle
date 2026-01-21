@@ -10,6 +10,7 @@ Complete configuration reference for ContactUsBundle.
    - [subject_prefix](#subject_prefix)
    - [storage](#storage)
    - [spam_protection](#spam_protection)
+   - [crud_route_prefix](#crud_route_prefix)
    - [fields](#fields)
    - [api](#api)
    - [email_verification](#email_verification)
@@ -28,8 +29,9 @@ contact_us:
 
 ## All Options
 
-### recipients (required)
+### recipients (required for email/both)
 Array of email addresses that will receive contact form submissions.
+Skip or leave empty when `storage: database` (no email delivery).
 
 ```yaml
 contact_us:
@@ -44,18 +46,52 @@ Prefix added to email subjects. Default: `[Contact Form]`
 ### storage
 Storage mode for contact messages:
 - `email` - Send email only (default)
-- `database` - Save to database only
+- `database` - Save to database only (no mailer needed)
 - `both` - Send email and save to database
 
-**Note**: Database storage requires Doctrine ORM to be installed and configured.
+**Note**: Database storage requires Doctrine ORM. When using the bundle entity with database/both storage, the bundle provides auto-imported admin CRUD routes (configured during setup wizard). When using your own entity, no CRUD routes are imported; you can wire your own controller or extend the bundle's abstract CRUD controller if desired.
+
+### crud_route_prefix
+Base URL path for admin CRUD routes (only used when `storage` is `database` or `both` AND using the bundle's `ContactMessageEntity`).
+Default: `/admin/contact`
+
+**Note**: This is configured interactively during the setup wizard to avoid conflicts with existing routes (e.g., EasyAdmin routes). You can change it manually in the config if needed.
+
+```yaml
+contact_us:
+    crud_route_prefix: /admin/contact-messages
+```
+
+Routes will be available at:
+- `{crud_route_prefix}` - List all messages
+- `{crud_route_prefix}/<id>` - View message details
+- `{crud_route_prefix}/<id>/edit` - Edit message
+- `{crud_route_prefix}/<id>/delete` - Delete message
 
 ### spam_protection
 
-#### level
-Protection level (1-3):
-1. Honeypot + Rate limiting + Timing check (default)
-2. Level 1 + Email verification
-3. Level 2 + Third-party captcha
+Spam protection can be configured using individual features. Features are independent and can be combined.
+
+#### features
+Array of enabled features:
+- `1` - Honeypot + Rate limiting + Timing check (available always, recommended minimum)
+- `2` - Email verification (only available when `storage` is `email` or `both`)
+- `3` - Third-party captcha / hCaptcha / reCAPTCHA (available always, requires provider configuration)
+
+**Examples**:
+```yaml
+contact_us:
+    spam_protection:
+        features: [1]           # Honeypot + rate limiting only
+        # OR
+        features: [1, 3]        # Honeypot + rate limiting + captcha
+        # OR (only with email enabled)
+        features: [1, 2, 3]     # All features
+```
+
+**Feature availability by storage mode**:
+- `storage: email` or `both`: Features 1, 2, and 3 available
+- `storage: database`: Features 1 and 3 available (feature 2 requires email delivery)
 
 #### rate_limit
 - `limit`: Maximum submissions per interval (default: 3)
@@ -70,7 +106,7 @@ Minimum seconds between form load and submission (default: 3)
 - `secret_key`: Secret key for captcha provider
 
 ### fields
-Define custom form fields with validation.
+Define custom form fields with validation. The defaults include `name`, `email`, `subject`, and `message`.
 
 ```yaml
 contact_us:

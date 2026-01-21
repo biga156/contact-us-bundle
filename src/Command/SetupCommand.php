@@ -45,6 +45,9 @@ class SetupCommand extends Command
 
             $this->saveConfiguration($config);
             $this->importRoutesToConfig();
+            if ($config['storage'] === 'database' || $config['storage'] === 'both') {
+                $this->importCrudRoutesToConfig();
+            }
             $this->clearCacheAndCompileAssets();
 
             $this->io->success('ContactUs bundle configuration saved successfully (non-interactive).');
@@ -83,11 +86,13 @@ class SetupCommand extends Command
 
         $config = [];
 
-        // Step 1: Email recipients
-        $config['recipients'] = $this->askRecipients();
-
-        // Step 2: Storage mode
+        // Step 1: Storage mode (drives the rest of the flow)
         $config['storage'] = $this->askStorageMode();
+
+        // Step 2: Recipients (only when email delivery is enabled)
+        $config['recipients'] = in_array($config['storage'], ['email', 'both'], true)
+            ? $this->askRecipients()
+            : [];
 
         // Step 3: If database, ask about table/entity
         $usingBundleEntity = false;
@@ -103,14 +108,27 @@ class SetupCommand extends Command
         $config['fields'] = $this->askFormFields($config['entity'] ?? null);
 
         // Step 5: Spam protection
-        $config['spam_protection'] = $this->askSpamProtection();
+        $config['spam_protection'] = $this->askSpamProtection($config['storage']);
 
-        // Step 6: Mailer configuration
-        $config['mailer'] = $this->askMailerConfiguration();
+        // Step 6: Mailer configuration (skip for database-only)
+        $config['mailer'] = in_array($config['storage'], ['email', 'both'], true)
+            ? $this->askMailerConfiguration()
+            : $this->buildMailerDefaults();
+
+        // Step 7: CRUD route prefix (only if database storage is enabled)
+        $crudRoutePrefix = '/admin/contact';
+        if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
+            $crudRoutePrefix = $this->askCrudRoutePrefix();
+            $config['crud_route_prefix'] = $crudRoutePrefix;
+        }
 
         // Save configuration
         $this->saveConfiguration($config);
         $this->importRoutesToConfig();
+        if ($usingBundleEntity && in_array($config['storage'], ['database', 'both'], true)) {
+            $crudPrefix = $config['crud_route_prefix'] ?? '/admin/contact';
+            $this->importCrudRoutesToConfig($crudPrefix);
+        }
         $this->clearCacheAndCompileAssets();
 
         $this->io->success('ContactUs bundle configuration saved successfully!');
@@ -139,6 +157,19 @@ class SetupCommand extends Command
         $this->io->writeln('<info>The contact form is now available at:</info>');
         $this->io->writeln('  • <fg=green>/contact</> (GET|POST) - Contact form page');
         $this->io->writeln('  • LiveComponent: {{ component(\'ContactUs\') }} in your templates');
+
+        // List CRUD admin routes if database or both mode
+        if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
+            $crudPrefix = $config['crud_route_prefix'] ?? '/admin/contact';
+            $this->io->section('Admin CRUD Routes');
+            $this->io->writeln('<info>The following admin routes are available for managing messages:</info>');
+            $this->io->listing([
+                "<fg=cyan>{$crudPrefix}</> (GET) - List all messages",
+                "<fg=cyan>{$crudPrefix}/<id></> (GET) - View message details",
+                "<fg=cyan>{$crudPrefix}/<id>/edit</> (GET|POST) - Edit message",
+                "<fg=cyan>{$crudPrefix}/<id>/delete</> (POST) - Delete message",
+            ]);
+        }
 
         return Command::SUCCESS;
     }
@@ -206,29 +237,46 @@ class SetupCommand extends Command
             return null;
         }
 
-        // Check for existing ContactMessage entities
-        $existingEntities = $this->findContactMessageEntities();
+        // First question: bundle's entity or existing entity?
+        $useOwnEntity = $this->io->confirm(
+            'Use the bundle\'s built-in ContactMessageEntity (recommended for quick setup)?',
+            true
+        );
 
-        if (!empty($existingEntities)) {
-            $this->io->info('Found existing ContactMessage entities:');
-            $this->io->listing($existingEntities);
-
-            $useExisting = $this->io->confirm('Use an existing entity instead of creating a new table?', true);
-
-            if ($useExisting) {
-                $entityClass = $this->io->choice('Select entity to use', $existingEntities);
-                
-                return [
-                    'use_existing' => true,
-                    'class' => $entityClass,
-                    'metadata' => $this->getEntityMetadata($entityClass),
-                ];
-            }
+        if ($useOwnEntity) {
+            return [
+                'use_existing' => false,
+                'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity',
+            ];
         }
 
+        // User wants to use their own entity; find available ContactMessage entities
+        $existingEntities = $this->findContactMessageEntities();
+
+        if (empty($existingEntities)) {
+            $this->io->warning('No existing ContactMessage entities found in your application.');
+            $this->io->info('Please create an entity that implements ContactMessage contract or use the bundle\'s entity.');
+            $fallback = $this->io->confirm('Fall back to bundle\'s ContactMessageEntity?', true);
+            
+            if ($fallback) {
+                return [
+                    'use_existing' => false,
+                    'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity',
+                ];
+            }
+
+            return null;
+        }
+
+        $this->io->info('Available ContactMessage entities:');
+        $this->io->listing($existingEntities);
+
+        $entityClass = $this->io->choice('Select entity to use', $existingEntities);
+        
         return [
-            'use_existing' => false,
-            'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity',
+            'use_existing' => true,
+            'class' => $entityClass,
+            'metadata' => $this->getEntityMetadata($entityClass),
         ];
     }
 
@@ -427,30 +475,89 @@ class SetupCommand extends Command
         ];
     }
 
+    private function askCrudRoutePrefix(): string
+    {
+        $this->io->section('Admin CRUD Routes Configuration');
+        $this->io->writeln('<fg=cyan>Specify the base URL path for admin CRUD routes</>');
+        $this->io->writeln('Example: /admin/contact, /dashboard/messages, /backend/contact-messages, etc.');
+        $this->io->writeln('');
+
+        $prefix = $this->io->ask(
+            'Base route prefix for admin CRUD',
+            '/admin/contact',
+            function($input) {
+                // Validate: must start with /
+                if (!str_starts_with($input, '/')) {
+                    throw new \RuntimeException('Route prefix must start with / (e.g., /admin/contact)');
+                }
+                // Validate: no trailing slash
+                if (str_ends_with($input, '/') && strlen($input) > 1) {
+                    throw new \RuntimeException('Route prefix must not end with /');
+                }
+                return $input;
+            }
+        );
+
+        $this->io->info("CRUD routes will be available at:");
+        $this->io->listing([
+            "{$prefix} - List all messages",
+            "{$prefix}/<id> - View message",
+            "{$prefix}/<id>/edit - Edit message",
+            "{$prefix}/<id>/delete - Delete message",
+        ]);
+
+        return $prefix;
+    }
+
     /**
      * @return array<string, mixed>
      */
-    private function askSpamProtection(): array
+    private function askSpamProtection(string $storageMode): array
     {
         $this->io->section('Spam Protection');
 
-        $choices = [
-            'Level 1: Honeypot + Rate limiting (recommended)',
-            'Level 2: Level 1 + Email verification',
-            'Level 3: Level 2 + Third-party captcha',
-        ];
+        $availableFeatures = [];
 
-        $selectedIndex = $this->io->choice(
-            'Select spam protection level',
-            $choices,
-            $choices[0]  // Default to first option
+        // Feature 1: Always available (honeypot + rate limiting)
+        $availableFeatures['1'] = 'Honeypot + Rate limiting';
+        
+        // Feature 2: Email verification (only if email delivery is enabled)
+        if (in_array($storageMode, ['email', 'both'], true)) {
+            $availableFeatures['2'] = 'Email verification';
+        } else {
+            $this->io->info('<comment>Note:</comment> Email verification (feature 2) is only available when email delivery is enabled.');
+        }
+        
+        // Feature 3: Always available if Captcha is configured (third-party captcha)
+        $availableFeatures['3'] = 'Third-party captcha (hCaptcha/reCAPTCHA)';
+
+        // Ask user to select which features to enable
+        $this->io->writeln('<fg=cyan>Select spam protection features (can select multiple):</>');
+        $this->io->writeln('  <fg=green>1</> - Honeypot + Rate limiting (recommended)');
+        if (in_array($storageMode, ['email', 'both'], true)) {
+            $this->io->writeln('  <fg=green>2</> - Email verification');
+        }
+        $this->io->writeln('  <fg=green>3</> - Third-party captcha');
+        $this->io->writeln('');
+        
+        $featureInput = $this->io->ask(
+            'Enter feature numbers to enable (comma-separated, e.g. "1,3" or just "1")',
+            '1'  // Default: just feature 1
         );
 
-        // Map choice back to level number (1, 2, or 3)
-        $level = array_search($selectedIndex, $choices, true) + 1;
+        // Parse input and build enabled features
+        $selectedFeatures = array_filter(
+            array_map('trim', explode(',', $featureInput)),
+            fn($f) => !empty($f) && isset($availableFeatures[$f])
+        );
+
+        if (empty($selectedFeatures)) {
+            $this->io->warning('No valid features selected, defaulting to feature 1 (Honeypot + Rate limiting).');
+            $selectedFeatures = ['1'];
+        }
 
         return [
-            'level' => $level,
+            'features' => array_values($selectedFeatures),
             'rate_limit' => [
                 'limit' => 3,
                 'interval' => '15 minutes',
@@ -490,6 +597,19 @@ class SetupCommand extends Command
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function buildMailerDefaults(): array
+    {
+        return [
+            'from_email' => null,
+            'from_name' => 'Contact Form',
+            'subject_prefix' => '[Contact Form]',
+            'send_copy_to_sender' => false,
+        ];
+    }
+
+    /**
      * Build default configuration in non-interactive mode
      *
      * @return array<string, mixed>
@@ -522,7 +642,7 @@ class SetupCommand extends Command
         ];
         $config['fields'] = $this->getDefaultFields();
         $config['spam_protection'] = [
-            'level' => 1,
+            'features' => ['1'],
             'rate_limit' => [
                 'limit' => 3,
                 'interval' => '15 minutes',
@@ -612,9 +732,11 @@ class SetupCommand extends Command
         $yaml .= "  # Storage mode: 'email' (send only), 'database' (save only), or 'both' (recommended)\n";
         $yaml .= "  storage: " . $config['storage'] . "\n\n";
         $yaml .= "  # Spam protection settings\n";
+        $yaml .= "  # Documentation: See config/packages/contact_us.yaml for available features\n";
         $yaml .= "  spam_protection:\n";
-        $yaml .= "    # Level: 1 (honeypot+rate limit), 2 (+email verification), 3 (+captcha)\n";
-        $yaml .= "    level: " . $config['spam_protection']['level'] . "\n";
+        $yaml .= "    # Enabled features: 1 (Honeypot + Rate limiting), 2 (Email verification, if email enabled), 3 (Captcha)\n";
+        $features_str = implode(', ', $config['spam_protection']['features'] ?? ['1']);
+        $yaml .= "    features: [{$features_str}]\n";
         $yaml .= "    rate_limit:\n";
         $yaml .= "      limit: " . $config['spam_protection']['rate_limit']['limit'] . "\n";
         $yaml .= "      interval: '" . $config['spam_protection']['rate_limit']['interval'] . "'\n";
@@ -648,14 +770,21 @@ class SetupCommand extends Command
         }
         $yaml .= "\n  # Mailer settings\n";
         $yaml .= "  mailer:\n";
-        $yaml .= "    from_email: " . $config['mailer']['from_email'] . "\n";
-        $yaml .= "    from_name: '" . $config['mailer']['from_name'] . "'\n";
+        $fromEmail = $config['mailer']['from_email'] ?? null;
+        $yaml .= "    from_email: " . ($fromEmail !== null ? $fromEmail : "~") . "\n";
+        $yaml .= "    from_name: '" . ($config['mailer']['from_name'] ?? 'Contact Form') . "'\n";
         $yaml .= "    send_copy_to_sender: " . ($config['mailer']['send_copy_to_sender'] ? 'true' : 'false') . "\n";
 
-        // Add entity class if using bundle's own entity
-        if (isset($config['entity']) && !($config['entity']['use_existing'] ?? false)) {
-            $yaml .= "\n  # Database entity class (using bundle's entity with cg_ prefix)\n";
+        // Persist entity class selection (bundle or existing)
+        if (isset($config['entity']['class'])) {
+            $yaml .= "\n  # Database entity class\n";
             $yaml .= "  entity_class: " . $config['entity']['class'] . "\n";
+        }
+
+        // Persist CRUD route prefix
+        if (isset($config['crud_route_prefix'])) {
+            $yaml .= "\n  # Admin CRUD routes base path (only if using bundle entity with database storage)\n";
+            $yaml .= "  crud_route_prefix: " . $config['crud_route_prefix'] . "\n";
         }
 
         file_put_contents($configFile, $yaml);
@@ -716,6 +845,67 @@ class SetupCommand extends Command
 
         // Append to routes.yaml
         file_put_contents($routesFile, $content . $routeImport);
+    }
+
+    /**
+     * Import admin CRUD routes to config/routes.yaml when using bundle entity + database storage
+     */
+    private function importCrudRoutesToConfig(string $crudRoutePrefix = '/admin/contact'): void
+    {
+        $routesFile = $this->projectDir . '/config/routes.yaml';
+
+        if (!file_exists($routesFile)) {
+            $this->io->warning('config/routes.yaml not found. Please create it manually.');
+            return;
+        }
+
+        $content = file_get_contents($routesFile);
+        if ($content === false) {
+            $this->io->warning('Could not read config/routes.yaml');
+            return;
+        }
+
+        // Check if already imported
+        if (strpos($content, '@ContactUsBundle/config/routes_crud.php') !== false) {
+            $this->io->info('Admin routes already imported to config/routes.yaml');
+            return;
+        }
+
+        // Parse existing routes to detect locale prefix pattern
+        $existingConfig = Yaml::parse($content);
+        $hasLocalePrefix = false;
+        $localePrefixes = ['fr' => '', 'en' => '/en', 'hu' => '/hu'];
+
+        if (is_array($existingConfig)) {
+            foreach ($existingConfig as $routeConfig) {
+                if (isset($routeConfig['prefix']) && is_array($routeConfig['prefix'])) {
+                    $hasLocalePrefix = true;
+                    $localePrefixes = $routeConfig['prefix'];
+                    break;
+                }
+            }
+        }
+
+        $routeImport = "\n# ContactUs Bundle Admin Routes (auto-imported by contact:setup)\n";
+        $routeImport .= "# Base path configured during setup: {$crudRoutePrefix}\n";
+        $routeImport .= "contact_us_admin:\n";
+        $routeImport .= "    resource: '@ContactUsBundle/config/routes_crud.php'\n";
+        $routeImport .= "    type: php\n";
+        $routeImport .= "    prefix:\n";
+
+        if ($hasLocalePrefix) {
+            // Append CRUD prefix to each locale prefix
+            foreach ($localePrefixes as $locale => $localePrefix) {
+                $fullPrefix = rtrim($localePrefix, '/') . $crudRoutePrefix;
+                $routeImport .= "        {$locale}: '{$fullPrefix}'\n";
+            }
+        } else {
+            // No locale prefix, just use the CRUD prefix directly
+            $routeImport .= "        default: '{$crudRoutePrefix}'\n";
+        }
+
+        file_put_contents($routesFile, $content . $routeImport);
+        $this->io->info('Admin CRUD routes imported to config/routes.yaml');
     }
 
     /**

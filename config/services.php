@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Caeligo\ContactUsBundle\Command\SetupCommand;
+use Caeligo\ContactUsBundle\Controller\Admin\DefaultContactCrudController;
 use Caeligo\ContactUsBundle\Controller\ContactController;
 use Caeligo\ContactUsBundle\Form\ContactFormType;
 use Caeligo\ContactUsBundle\Service\ContactMailer;
 use Caeligo\ContactUsBundle\Service\ContactSubmissionService;
+use Caeligo\ContactUsBundle\Service\Crud\ContactCrudManager;
+use Caeligo\ContactUsBundle\Service\Crud\CrudManagerInterface;
 use Caeligo\ContactUsBundle\SpamProtection\ContactRateLimiter;
 use Caeligo\ContactUsBundle\SpamProtection\HoneypotValidator;
 use Caeligo\ContactUsBundle\SpamProtection\NullCaptchaValidator;
@@ -63,6 +66,14 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$autoReplyFrom', param('contact_us.mailer.from_email'))
         ->arg('$sendCopyToSender', param('contact_us.mailer.send_copy_to_sender'));
 
+    // CRUD Manager (bundle default)
+    $services->set(ContactCrudManager::class)
+        ->arg('$entityManager', service('doctrine.orm.entity_manager')->nullOnInvalid())
+        ->arg('$entityClass', param('contact_us.entity_class'));
+
+    $services->alias(CrudManagerInterface::class, ContactCrudManager::class)
+        ->public();
+
     // Submission Service
     $services->set(ContactSubmissionService::class)
         ->arg('$storage', service(StorageInterface::class))
@@ -79,6 +90,11 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$fieldsConfig', param('contact_us.fields'))
         ->arg('$formFactory', service('form.factory'))
         ->arg('$urlGenerator', service('router'))
+        ->tag('controller.service_arguments');
+
+    $services->set(DefaultContactCrudController::class)
+        ->arg('$manager', service(CrudManagerInterface::class))
+        ->arg('$dispatcher', service('event_dispatcher'))
         ->tag('controller.service_arguments');
 
     // Commands

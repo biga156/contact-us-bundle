@@ -17,6 +17,7 @@ A highly configurable Symfony bundle for contact forms with multiple UI variants
 - 🌍 **Multilingual** - Optional translation support with auto-detect (works without symfony/translation)
 - 🔌 **Pluggable architecture** - Events, storage adapters, captcha providers
 - 🚀 **Zero-build assets** - Works with Symfony AssetMapper (6.4+)
+- 🗂️ **Built-in admin CRUD** - Database storage ships with an overridable CRUD for the bundle entity
 
 ## Requirements
 
@@ -27,6 +28,7 @@ A highly configurable Symfony bundle for contact forms with multiple UI variants
 **Optional**:
 - Doctrine ORM 2.14+ or 3.x (for database storage)
 - Symfony UX LiveComponent 2.0+ (for LiveComponent UI)
+- Symfony Mailer (for email or email+database functions)
 
 ## Installation
 
@@ -43,7 +45,7 @@ php bin/console contact:setup
 ```
 
 The wizard automatically:
-- Generates `config/packages/contact_us.yaml` with inline comments
+- Generates `config/packages/contact_us.yaml` 
 - Imports routes to `config/routes.yaml` (adapts to your locale prefixes)
 - Clears cache and compiles assets
 - Optionally creates and runs database migrations
@@ -58,13 +60,8 @@ The wizard automatically:
 php bin/console contact:setup
 ```
 
-The wizard will:
-- Generate `config/packages/contact_us.yaml` with inline documentation
-- Automatically import routes to `config/routes.yaml` (adapts to locale prefixes)
-- Clear cache and compile assets
-- Optionally create and run migrations (if you choose the bundle's entity)
-
 After setup completes, visit `/contact` to see the form.
+If you selected database storage with the bundle entity, admin CRUD routes are available by the selection in the setup wizard (for example. `/asmin/contact`) (auto-imported by the wizard).
 
 ### 2. Or Use LiveComponent (no route import needed)
 
@@ -79,8 +76,8 @@ Edit `config/packages/contact_us.yaml` to adjust recipients, storage, spam prote
 
 ```yaml
 contact_us:
-    recipients: ['admin@example.com']
-    storage: email  # email|database|both
+    storage: database  # email|database|both
+    recipients: []     # only needed for email or both
     spam_protection:
         level: 1  # 1=honeypot+rate limit, 2=+email verification, 3=+captcha provider
     fields:

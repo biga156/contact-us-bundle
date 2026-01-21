@@ -43,6 +43,12 @@ templates/bundles/ContactUsBundle/contact/form.html.twig
 
 and adjust the loop. Keep the hidden fields (`email_confirm`, `_form_token_time`, `_token`) for spam protection and CSRF.
 
+### Overriding CRUD Logic (Database Storage)
+
+- **Controller**: Extend `Caeligo\ContactUsBundle\Controller\Admin\AbstractContactCrudController` in your app and point the routes to your controller if you need to change flows or responses.
+- **Service**: Replace the `CrudManagerInterface` alias with your own service to change persistence/lookup behavior without touching controllers.
+- **Events**: Listen to `contact_us.crud.list`, `contact_us.crud.show`, and `contact_us.crud.delete` for lightweight adjustments (e.g., filtering, audit logging) without overriding anything.
+
 ### Directory Structure
 
 ```
@@ -56,6 +62,18 @@ your-project/
 │        └─ email/
 │           ├─ contact_notification.html.twig
 │           └─ contact_notification.txt.twig
+```
+
+If you use database storage with the bundle entity, you can also override the admin CRUD templates:
+
+```
+templates/
+    bundles/
+        ContactUsBundle/
+            admin/
+                contact/
+                    index.html.twig   # List view
+                    show.html.twig    # Detail view
 ```
 
 ### Example: Extending Default Template
