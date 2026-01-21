@@ -1,0 +1,134 @@
+{% extends '@ContactUs/base.html.twig' %}
+
+{% block title %}
+    {% if success %}
+        {{ 'contact.verification.verified_title'|trans({}, 'contact_us') }}
+    {% else %}
+        {{ 'contact.verification.error_title'|trans({}, 'contact_us') }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="contact-verified">
+    <div class="verified-container">
+        {% if success %}
+            <div class="verified-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            
+            <h1>{{ 'contact.verification.verified_title'|trans({}, 'contact_us') }}</h1>
+            <p class="verified-message">{{ 'contact.verification.verified_message'|trans({}, 'contact_us') }}</p>
+            
+            <div class="verified-details">
+                <p>{{ 'contact.verification.verified_details'|trans({}, 'contact_us') }}</p>
+            </div>
+        {% else %}
+            <div class="verified-icon error">
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            
+            <h1>{{ 'contact.verification.error_title'|trans({}, 'contact_us') }}</h1>
+            <p class="verified-message error-message">{{ 'contact.verification.expired'|trans({}, 'contact_us') }}</p>
+            
+            <div class="error-details">
+                <p>{{ 'contact.verification.error_details'|trans({}, 'contact_us') }}</p>
+            </div>
+        {% endif %}
+        
+        <a href="{{ path('contact_us_form') }}" class="btn-back">
+            {{ 'contact.verification.back_to_site'|trans({}, 'contact_us') }}
+        </a>
+    </div>
+</div>
+
+<style>
+    .contact-verified {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 60vh;
+        padding: 40px 20px;
+    }
+    
+    .verified-container {
+        text-align: center;
+        max-width: 500px;
+        background: #fff;
+        padding: 60px 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .verified-icon.success {
+        color: #10b981;
+        margin-bottom: 24px;
+    }
+    
+    .verified-icon.error {
+        color: #ef4444;
+        margin-bottom: 24px;
+    }
+    
+    .verified-container h1 {
+        color: #111827;
+        font-size: 28px;
+        margin-bottom: 16px;
+    }
+    
+    .verified-message {
+        color: #6b7280;
+        font-size: 18px;
+        margin-bottom: 24px;
+    }
+    
+    .error-message {
+        color: #dc2626;
+    }
+    
+    .verified-details {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 32px;
+        color: #166534;
+    }
+    
+    .error-details {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 32px;
+        color: #991b1b;
+    }
+    
+    .verified-details p,
+    .error-details p {
+        margin: 0;
+    }
+    
+    .btn-back {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+    
+    .btn-back:hover {
+        opacity: 0.9;
+        color: white;
+    }
+</style>
+{% endblock %}

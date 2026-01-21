@@ -35,12 +35,36 @@ class DoctrineStorage implements StorageInterface
             throw new \RuntimeException('Doctrine storage is not available. Install doctrine/orm and doctrine/doctrine-bundle.');
         }
 
-        // If it's the default bundle entity, use the fromModel factory method
+        if ($this->entityManager === null) {
+            throw new \RuntimeException('EntityManager is not available.');
+        }
+
+        // Check if this is an update (message has an ID)
+        $entity = null;
+        if ($message->getId() !== null) {
+            /** @var T|null $entity */
+            $entity = $this->entityManager->getRepository($this->entityClass)->find($message->getId());
+        }
+
+        // If it's the default bundle entity
         if ($this->entityClass === ContactMessageEntity::class) {
-            $entity = ContactMessageEntity::fromModel($message);
+            if ($entity instanceof ContactMessageEntity) {
+                // Update existing entity
+                $entity->setData($message->getData());
+                $entity->setIpAddress($message->getIpAddress());
+                $entity->setUserAgent($message->getUserAgent());
+                $entity->setVerified($message->isVerified());
+                $entity->setVerificationToken($message->getVerificationToken());
+                $entity->setVerifiedAt($message->getVerifiedAt());
+            } else {
+                // Create new entity
+                $entity = ContactMessageEntity::fromModel($message);
+            }
         } else {
-            // For custom entities, create instance and map fields manually
-            $entity = new $this->entityClass();
+            // For custom entities
+            if ($entity === null) {
+                $entity = new $this->entityClass();
+            }
             // Map ContactMessage data to custom entity
             // This assumes the entity has compatible properties/setters
             if (method_exists($entity, 'setData')) {
@@ -60,10 +84,15 @@ class DoctrineStorage implements StorageInterface
             if (method_exists($entity, 'setUserAgent')) {
                 $entity->setUserAgent($message->getUserAgent());
             }
-        }
-
-        if ($this->entityManager === null) {
-            throw new \RuntimeException('EntityManager is not available.');
+            if (method_exists($entity, 'setVerified')) {
+                $entity->setVerified($message->isVerified());
+            }
+            if (method_exists($entity, 'setVerificationToken')) {
+                $entity->setVerificationToken($message->getVerificationToken());
+            }
+            if (method_exists($entity, 'setVerifiedAt')) {
+                $entity->setVerifiedAt($message->getVerifiedAt());
+            }
         }
         
         $this->entityManager->persist($entity);

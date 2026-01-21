@@ -28,6 +28,20 @@
 
             <dt>User agent</dt>
             <dd>{{ message.userAgent }}</dd>
+            
+            {% if message.verified is defined and message.verified is not null %}
+            <dt>{{ 'contact.verification.status'|trans({}, 'contact_us') }}</dt>
+            <dd>
+                {% if message.verified %}
+                    <span class="contact-badge contact-badge--success">{{ 'contact.verification.status_verified'|trans({}, 'contact_us') }}</span>
+                    {% if message.verifiedAt is defined and message.verifiedAt %}
+                        <span class="contact-verified-at">({{ message.verifiedAt|date('Y-m-d H:i') }})</span>
+                    {% endif %}
+                {% else %}
+                    <span class="contact-badge contact-badge--warning">{{ 'contact.verification.status_pending'|trans({}, 'contact_us') }}</span>
+                {% endif %}
+            </dd>
+            {% endif %}
         </dl>
 
         <div class="contact-admin-actions">
@@ -38,4 +52,27 @@
         </div>
     </div>
 </div>
+
+<style>
+.contact-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.contact-badge--success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+.contact-badge--warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.contact-verified-at {
+    margin-left: 8px;
+    color: #6b7280;
+    font-size: 14px;
+}
+</style>
 {% endblock %}

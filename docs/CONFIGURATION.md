@@ -70,28 +70,8 @@ Routes will be available at:
 
 ### spam_protection
 
-Spam protection can be configured using individual features. Features are independent and can be combined.
-
-#### features
-Array of enabled features:
-- `1` - Honeypot + Rate limiting + Timing check (available always, recommended minimum)
-- `2` - Email verification (only available when `storage` is `email` or `both`)
-- `3` - Third-party captcha / hCaptcha / reCAPTCHA (available always, requires provider configuration)
-
-**Examples**:
-```yaml
-contact_us:
-    spam_protection:
-        features: [1]           # Honeypot + rate limiting only
-        # OR
-        features: [1, 3]        # Honeypot + rate limiting + captcha
-        # OR (only with email enabled)
-        features: [1, 2, 3]     # All features
-```
-
-**Feature availability by storage mode**:
-- `storage: email` or `both`: Features 1, 2, and 3 available
-- `storage: database`: Features 1 and 3 available (feature 2 requires email delivery)
+Base protections are always enabled by default: **Honeypot**, **Timing check**, and **Rate limiting**.
+You can optionally enable a captcha provider. Email verification is configured separately and only applies when `storage: both`.
 
 #### rate_limit
 - `limit`: Maximum submissions per interval (default: 3)
@@ -150,13 +130,13 @@ contact_us:
 ```
 
 ### email_verification
-Two-step verification via email (Level 2 protection).
+Two-step verification via email. Only applicable when `storage: both`.
 
 ```yaml
 contact_us:
     email_verification:
         enabled: true
-        token_ttl: '1 hour'
+        token_ttl: '24 hours'
 ```
 
 ### mailer

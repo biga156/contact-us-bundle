@@ -1,0 +1,30 @@
+{{ 'contact.verification.email_title'|trans({}, 'contact_us') }}
+============================================================
+
+{{ 'contact.verification.email_intro'|trans({}, 'contact_us') }}
+
+{{ 'contact.verification.your_message'|trans({}, 'contact_us') }}:
+------------------------------------------------------------
+
+{{ 'contact.form.name'|trans({}, 'contact_us') }}: {{ message.get('name') }}
+{{ 'contact.form.email'|trans({}, 'contact_us') }}: {{ message.get('email') }}
+{% if message.get('phone') %}{{ 'contact.form.phone'|trans({}, 'contact_us') }}: {{ message.get('phone') }}
+{% endif %}
+{% if message.get('subject') %}{{ 'contact.form.subject'|trans({}, 'contact_us') }}: {{ message.get('subject') }}
+{% endif %}
+{{ 'contact.form.message'|trans({}, 'contact_us') }}:
+{{ message.get('message') }}
+
+------------------------------------------------------------
+
+{{ 'contact.verification.warning_title'|trans({}, 'contact_us') }}
+{{ 'contact.verification.warning_text'|trans({}, 'contact_us') }}
+
+{{ 'contact.verification.verify_button'|trans({}, 'contact_us') }}:
+{{ verificationUrl }}
+
+------------------------------------------------------------
+
+{{ 'contact.verification.footer_text'|trans({}, 'contact_us') }}
+
+{{ 'contact.verification.not_you'|trans({}, 'contact_us') }}

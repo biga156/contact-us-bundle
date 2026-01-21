@@ -36,9 +36,14 @@ class ContactController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
-                $this->submissionService->process($form, $request);
+                $message = $this->submissionService->process($form, $request);
 
-                $this->addFlash('contact_success', 'contact.message.success');
+                // Different flash message depending on whether email verification is required
+                if ($this->submissionService->isEmailVerificationEnabled()) {
+                    $this->addFlash('contact_success', 'contact.message.verification_sent');
+                } else {
+                    $this->addFlash('contact_success', 'contact.message.success');
+                }
 
                 return $this->redirectToRoute('contact_us_form');
             } catch (\RuntimeException $e) {
@@ -49,5 +54,24 @@ class ContactController extends AbstractController
         return $this->render('@ContactUs/contact/form.html.twig', [
             'form' => $form,
         ]);
+    }
+
+    #[Route('/contact/verify/{token}', name: 'contact_us_verify', methods: ['GET'])]
+    public function verify(string $token): Response
+    {
+        try {
+            $message = $this->submissionService->verifyMessage($token);
+            
+            return $this->render('@ContactUs/contact/verified.html.twig', [
+                'message' => $message,
+                'success' => true,
+            ]);
+        } catch (\RuntimeException $e) {
+            return $this->render('@ContactUs/contact/verified.html.twig', [
+                'message' => null,
+                'success' => false,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

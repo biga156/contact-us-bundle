@@ -25,6 +25,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Subject</th>
+                        <th>{{ 'contact.verification.status'|trans({}, 'contact_us') }}</th>
                         <th>Created</th>
                         <th></th>
                     </tr>
@@ -36,6 +37,17 @@
                         <td>{{ message.get('name') }}</td>
                         <td>{{ message.get('email') }}</td>
                         <td>{{ message.get('subject') }}</td>
+                        <td>
+                            {% if message.verified is defined and message.verified is not null %}
+                                {% if message.verified %}
+                                    <span class="contact-badge contact-badge--success">{{ 'contact.verification.status_verified'|trans({}, 'contact_us') }}</span>
+                                {% else %}
+                                    <span class="contact-badge contact-badge--warning">{{ 'contact.verification.status_pending'|trans({}, 'contact_us') }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="contact-badge contact-badge--neutral">—</span>
+                            {% endif %}
+                        </td>
                         <td>{{ message.createdAt ? message.createdAt|date('Y-m-d H:i') : '' }}</td>
                         <td class="contact-admin-actions">
                             <a class="contact-button contact-button--ghost" href="{{ path('contact_us_admin_show', { id: message.id }) }}">View</a>
@@ -46,7 +58,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="6" class="contact-admin-empty">No messages found.</td>
+                        <td colspan="7" class="contact-admin-empty">No messages found.</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -69,4 +81,26 @@
         </div>
     </div>
 </div>
+
+<style>
+.contact-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.contact-badge--success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+.contact-badge--warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+.contact-badge--neutral {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+</style>
 {% endblock %}

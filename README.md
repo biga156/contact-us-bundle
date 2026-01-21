@@ -79,7 +79,18 @@ contact_us:
     storage: database  # email|database|both
     recipients: []     # only needed for email or both
     spam_protection:
-        level: 1  # 1=honeypot+rate limit, 2=+email verification, 3=+captcha provider
+        # Base protections are always enabled: Honeypot, Timing, Rate limiting
+        rate_limit:
+            limit: 3
+            interval: '15 minutes'
+        min_submit_time: 3
+        captcha:
+            provider: none   # none|turnstile|hcaptcha|recaptcha|friendly
+            site_key: ~      # set when provider is enabled
+            secret_key: ~    # set when provider is enabled
+    email_verification:
+        enabled: false       # only applicable when storage=both
+        token_ttl: '24 hours'
     fields:
         name:
             type: text

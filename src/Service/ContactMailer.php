@@ -8,6 +8,7 @@ use Caeligo\ContactUsBundle\Model\ContactMessage;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Service for sending contact form emails
@@ -25,12 +26,13 @@ class ContactMailer
         private string $fromName = 'Contact Form',
         private bool $enableAutoReply = false,
         private ?string $autoReplyFrom = null,
-        private bool $sendCopyToSender = false
+        private bool $sendCopyToSender = false,
+        private ?UrlGeneratorInterface $urlGenerator = null
     ) {
     }
 
     /**
-     * Send contact notification email
+     * Send contact notification email to admin(s)
      * 
      * @return array<string> List of recipient addresses
      */
@@ -58,7 +60,7 @@ class ContactMailer
             $email->addTo($recipient);
         }
 
-        // Optionally send the same notification to the sender
+        // Optionally send the same notification to the sender (only if NOT using email verification)
         if ($this->sendCopyToSender && !empty($data['email'])) {
             $email->addCc(new Address($data['email'], $data['name'] ?? ''));
         }
@@ -77,6 +79,63 @@ class ContactMailer
         }
 
         return $this->recipients;
+    }
+
+    /**
+     * Send verification email to the form sender
+     * Contains the message content AND a verification link
+     * Admin will only be notified after verification
+     */
+    public function sendVerificationEmail(ContactMessage $message, string $token): void
+    {
+        $data = $message->getData();
+
+        if (empty($data['email'])) {
+            throw new \RuntimeException('Cannot send verification email: sender email is missing');
+        }
+
+        $subject = $this->buildSubject($data) . ' - Please verify your submission';
+        
+        // Generate verification URL
+        $verificationUrl = $this->generateVerificationUrl($token);
+
+        $email = (new TemplatedEmail())
+            ->from(new Address(
+                $this->resolveFromEmail($data),
+                $this->fromName
+            ))
+            ->to(new Address($data['email'], $data['name'] ?? ''))
+            ->subject($subject)
+            ->htmlTemplate('@ContactUs/email/contact_verification.html.twig')
+            ->textTemplate('@ContactUs/email/contact_verification.txt.twig')
+            ->context([
+                'message' => $message,
+                'data' => $data,
+                'subject' => $subject,
+                'verificationUrl' => $verificationUrl,
+                'token' => $token,
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Generate verification URL
+     */
+    private function generateVerificationUrl(string $token): string
+    {
+        if ($this->urlGenerator !== null) {
+            return $this->urlGenerator->generate(
+                'contact_us_verify',
+                ['token' => $token],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+        }
+
+        // Fallback: construct URL manually (less ideal but works without router)
+        $baseUrl = $_SERVER['REQUEST_SCHEME'] ?? 'https';
+        $baseUrl .= '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        return $baseUrl . '/contact/verify/' . $token;
     }
 
     /**

@@ -107,12 +107,15 @@ class SetupCommand extends Command
         // Step 4: Form fields (auto-detect or manual)
         $config['fields'] = $this->askFormFields($config['entity'] ?? null);
 
-        // Step 5: Spam protection
+        // Step 5: Spam protection (base protections always enabled)
         $config['spam_protection'] = $this->askSpamProtection($config['storage']);
 
-        // Step 6: Mailer configuration (skip for database-only)
+        // Step 6: Email verification (only in BOTH storage mode)
+        $config['email_verification'] = $this->askEmailVerification($config['storage']);
+
+        // Step 7: Mailer configuration (skip for database-only)
         $config['mailer'] = in_array($config['storage'], ['email', 'both'], true)
-            ? $this->askMailerConfiguration()
+            ? $this->askMailerConfiguration($config['email_verification'])
             : $this->buildMailerDefaults();
 
         // Step 7: CRUD route prefix (only if database storage is enabled)
@@ -515,61 +518,78 @@ class SetupCommand extends Command
     private function askSpamProtection(string $storageMode): array
     {
         $this->io->section('Spam Protection');
+        $this->io->text('Base protections are always enabled: Honeypot, Timing check, and Rate limiting.');
+        $this->io->newLine();
 
-        $availableFeatures = [];
+        // Ask only about captcha enablement
+        $enableCaptcha = $this->io->confirm('Enable captcha protection?', false);
 
-        // Feature 1: Always available (honeypot + rate limiting)
-        $availableFeatures['1'] = 'Honeypot + Rate limiting';
-        
-        // Feature 2: Email verification (only if email delivery is enabled)
-        if (in_array($storageMode, ['email', 'both'], true)) {
-            $availableFeatures['2'] = 'Email verification';
-        } else {
-            $this->io->info('<comment>Note:</comment> Email verification (feature 2) is only available when email delivery is enabled.');
-        }
-        
-        // Feature 3: Always available if Captcha is configured (third-party captcha)
-        $availableFeatures['3'] = 'Third-party captcha (hCaptcha/reCAPTCHA)';
+        $captcha = [
+            'provider' => 'none',
+            'site_key' => null,
+            'secret_key' => null,
+        ];
 
-        // Ask user to select which features to enable
-        $this->io->writeln('<fg=cyan>Select spam protection features (can select multiple):</>');
-        $this->io->writeln('  <fg=green>1</> - Honeypot + Rate limiting (recommended)');
-        if (in_array($storageMode, ['email', 'both'], true)) {
-            $this->io->writeln('  <fg=green>2</> - Email verification');
-        }
-        $this->io->writeln('  <fg=green>3</> - Third-party captcha');
-        $this->io->writeln('');
-        
-        $featureInput = $this->io->ask(
-            'Enter feature numbers to enable (comma-separated, e.g. "1,3" or just "1")',
-            '1'  // Default: just feature 1
-        );
+        if ($enableCaptcha) {
+            $provider = $this->io->choice(
+                'Select captcha provider',
+                ['turnstile', 'hcaptcha', 'recaptcha', 'friendly'],
+                'turnstile'
+            );
 
-        // Parse input and build enabled features
-        $selectedFeatures = array_filter(
-            array_map('trim', explode(',', $featureInput)),
-            fn($f) => !empty($f) && isset($availableFeatures[$f])
-        );
+            $captcha['provider'] = $provider;
 
-        if (empty($selectedFeatures)) {
-            $this->io->warning('No valid features selected, defaulting to feature 1 (Honeypot + Rate limiting).');
-            $selectedFeatures = ['1'];
+            // Ask for keys when relevant
+            $captcha['site_key'] = $this->io->ask('Captcha site/public key', null);
+            $captcha['secret_key'] = $this->io->ask('Captcha secret key', null);
         }
 
         return [
-            'features' => array_values($selectedFeatures),
             'rate_limit' => [
                 'limit' => 3,
                 'interval' => '15 minutes',
             ],
             'min_submit_time' => 3,
+            'captcha' => $captcha,
         ];
     }
 
     /**
+     * Ask about email verification (only for BOTH storage mode)
+     *
+     * @return array{enabled: bool, token_ttl: string}
+     */
+    private function askEmailVerification(string $storageMode): array
+    {
+        $enabled = false;
+
+        if ($storageMode === 'both') {
+            $this->io->section('Email Verification');
+            $this->io->text('If enabled, messages are stored as unverified and admin notifications are delayed until the sender verifies their email.');
+            $enabled = $this->io->confirm('Enable email verification (recommended for BOTH mode)?', false);
+        } else {
+            // Not applicable for email-only or database-only
+            $enabled = false;
+        }
+
+        // Default TTL to 24 hours per product decision
+        $ttl = '24 hours';
+
+        if ($enabled) {
+            $ttl = $this->io->ask('Verification token TTL (e.g., "24 hours", "12 hours")', '24 hours') ?? '24 hours';
+        }
+
+        return [
+            'enabled' => $enabled,
+            'token_ttl' => $ttl,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $emailVerificationConfig
      * @return array<string, mixed>
      */
-    private function askMailerConfiguration(): array
+    private function askMailerConfiguration(array $emailVerificationConfig = []): array
     {
         $this->io->section('Mailer Configuration');
 
@@ -586,7 +606,18 @@ class SetupCommand extends Command
 
         $subjectPrefix = $this->io->ask('Email subject prefix', '[Contact Form]');
 
-        $sendCopyToSender = $this->io->confirm('Send a copy of the message to the sender email address?', false);
+        // If email verification is enabled, sender always gets email (with verification link)
+        // so send_copy_to_sender question is irrelevant
+        $emailVerificationEnabled = $emailVerificationConfig['enabled'] ?? false;
+        
+        if ($emailVerificationEnabled) {
+            $this->io->writeln('');
+            $this->io->writeln('<fg=yellow>Note:</> Email verification is enabled, so senders will automatically receive');
+            $this->io->writeln('<fg=yellow>      </> a verification email containing their message and a confirmation link.');
+            $sendCopyToSender = true;
+        } else {
+            $sendCopyToSender = $this->io->confirm('Send a copy of the message to the sender email address?', false);
+        }
 
         return [
             'from_email' => $fromEmail,
@@ -642,12 +673,20 @@ class SetupCommand extends Command
         ];
         $config['fields'] = $this->getDefaultFields();
         $config['spam_protection'] = [
-            'features' => ['1'],
             'rate_limit' => [
                 'limit' => 3,
                 'interval' => '15 minutes',
             ],
             'min_submit_time' => 3,
+            'captcha' => [
+                'provider' => 'none',
+                'site_key' => null,
+                'secret_key' => null,
+            ],
+        ];
+        $config['email_verification'] = [
+            'enabled' => false,
+            'token_ttl' => '24 hours',
         ];
         $config['mailer'] = [
             'from_email' => "'%env(CONTACT_EMAIL)%'",
@@ -732,15 +771,21 @@ class SetupCommand extends Command
         $yaml .= "  # Storage mode: 'email' (send only), 'database' (save only), or 'both' (recommended)\n";
         $yaml .= "  storage: " . $config['storage'] . "\n\n";
         $yaml .= "  # Spam protection settings\n";
-        $yaml .= "  # Documentation: See config/packages/contact_us.yaml for available features\n";
+        $yaml .= "  # Base protections always enabled: Honeypot, Timing check, Rate limiting\n";
         $yaml .= "  spam_protection:\n";
-        $yaml .= "    # Enabled features: 1 (Honeypot + Rate limiting), 2 (Email verification, if email enabled), 3 (Captcha)\n";
-        $features_str = implode(', ', $config['spam_protection']['features'] ?? ['1']);
-        $yaml .= "    features: [{$features_str}]\n";
         $yaml .= "    rate_limit:\n";
         $yaml .= "      limit: " . $config['spam_protection']['rate_limit']['limit'] . "\n";
         $yaml .= "      interval: '" . $config['spam_protection']['rate_limit']['interval'] . "'\n";
-        $yaml .= "    min_submit_time: " . $config['spam_protection']['min_submit_time'] . "\n\n";
+        $yaml .= "    min_submit_time: " . $config['spam_protection']['min_submit_time'] . "\n";
+        $yaml .= "    captcha:\n";
+        $yaml .= "      provider: " . ($config['spam_protection']['captcha']['provider'] ?? 'none') . "\n";
+        $yaml .= "      site_key: " . ($config['spam_protection']['captcha']['site_key'] ?? '~') . "\n";
+        $yaml .= "      secret_key: " . ($config['spam_protection']['captcha']['secret_key'] ?? '~') . "\n\n";
+
+        // Email verification block
+        $yaml .= "  email_verification:\n";
+        $yaml .= "    enabled: " . (($config['email_verification']['enabled'] ?? false) ? 'true' : 'false') . "\n";
+        $yaml .= "    token_ttl: '" . ($config['email_verification']['token_ttl'] ?? '24 hours') . "'\n\n";
         $yaml .= "  # Form field configuration\n";
         $yaml .= "  fields:\n";
         foreach ($config['fields'] as $fieldName => $fieldConfig) {

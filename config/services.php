@@ -64,7 +64,8 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$fromName', param('contact_us.mailer.from_name'))
         ->arg('$enableAutoReply', false)
         ->arg('$autoReplyFrom', param('contact_us.mailer.from_email'))
-        ->arg('$sendCopyToSender', param('contact_us.mailer.send_copy_to_sender'));
+        ->arg('$sendCopyToSender', param('contact_us.mailer.send_copy_to_sender'))
+        ->arg('$urlGenerator', service('router')->nullOnInvalid());
 
     // CRUD Manager (bundle default)
     $services->set(ContactCrudManager::class)
@@ -82,7 +83,8 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$timingValidator', service(TimingValidator::class))
         ->arg('$rateLimiter', service(ContactRateLimiter::class))
         ->arg('$eventDispatcher', service('event_dispatcher'))
-        ->arg('$storageMode', param('contact_us.storage'));
+        ->arg('$storageMode', param('contact_us.storage'))
+        ->arg('$emailVerificationConfig', param('contact_us.email_verification'));
 
     // Controller
     $services->set(ContactController::class)

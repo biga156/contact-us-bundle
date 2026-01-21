@@ -14,6 +14,7 @@ contact:
     # Sikeres/Hiba üzenetek
     message:
         success: 'Üzenetét sikeresen elküldtük. Hamarosan jelentkezünk.'
+        verification_sent: 'Köszönjük! Hitelesítő emailt küldtünk az email címére. Kérjük, kattintson az emailben található linkre az üzenet megerősítéséhez.'
         error: 'Hiba történt az üzenet küldése során. Kérjük, próbálja újra.'
         spam_detected: 'Spam észlelve. Kérjük, próbálja újra később.'
         rate_limit_exceeded: 'Túl sok kérés. Kérjük, várjon mielőtt újra próbálkozna.'
@@ -26,14 +27,50 @@ contact:
         phone: 'Telefonszám'
         subject: 'Tárgy'
         message: 'Üzenet'
+    
+    # Űrlap mezők címkéi (alternatív)
+    form:
+        name: 'Név'
+        email: 'E-mail cím'
+        phone: 'Telefonszám'
+        subject: 'Tárgy'
+        message: 'Üzenet'
         
     # Adatvédelmi megjegyzés
     privacy_note: 'Személyes adatait adatvédelmi irányelvünknek megfelelően kezeljük.'
     
-    # Email hitelesítés (2. szintű spam védelem)
+    # Email hitelesítés (spam védelem)
     verification:
+        # Flash üzenetek
         title: 'Email hitelesítés szükséges'
         message: 'Elküldtünk egy hitelesítő linket az email címére. Kattintson a linkre a beküldés befejezéséhez.'
         button: 'Email hitelesítése'
-        expired: 'Ez a hitelesítő link lejárt. Kérjük, küldje be újra az űrlapot.'
-        success: 'Az email címét sikeresen hitelesítettük és üzenetét elküldtük.'
+        expired: 'Ez a hitelesítő link lejárt vagy érvénytelen. Kérjük, küldje be újra az űrlapot.'
+        invalid_token: 'Érvénytelen hitelesítő link. Kérjük, küldje be újra az űrlapot.'
+        success: 'Az email címét sikeresen hitelesítettük és üzenetét elküldtük!'
+        
+        # Hitelesítő email
+        email_subject: 'Kérjük, erősítse meg kapcsolati üzenetét'
+        email_title: 'Üzenet megerősítése'
+        email_intro: 'Kapcsolati üzenetet küldött weboldalunkon. Kérjük, erősítse meg email címét a beküldés befejezéséhez.'
+        your_message: 'Az Ön üzenete'
+        warning_title: 'Fontos!'
+        warning_text: 'Ha nem Ön küldte ezt az üzenetet, kérjük, hagyja figyelmen kívül ezt az emailt. Az üzenet automatikusan törlődik.'
+        verify_button: 'Megerősítés és üzenet küldése'
+        link_fallback: 'Ha a gomb nem működik, másolja és illessze be ezt a linket a böngészőjébe:'
+        footer_text: 'Ez a hitelesítő link 24 óra múlva lejár.'
+        not_you: 'Ha nem Ön kérte ezt, nyugodtan figyelmen kívül hagyhatja ezt az emailt.'
+        
+        # Hitelesített oldal
+        verified_title: 'Üzenet megerősítve!'
+        verified_message: 'Email címét sikeresen hitelesítettük.'
+        verified_details: 'Üzenetét továbbítottuk csapatunknak. Hamarosan jelentkezünk.'
+        error_title: 'Hitelesítés sikertelen'
+        error_details: 'Kérjük, küldje el újra a kapcsolati űrlapot egy új üzenet küldéséhez.'
+        back_to_site: 'Vissza a kapcsolati űrlaphoz'
+        
+        # Admin CRUD
+        status: 'Hitelesítési állapot'
+        status_verified: 'Hitelesítve'
+        status_pending: 'Hitelesítésre vár'
+        verified_at: 'Hitelesítve'
