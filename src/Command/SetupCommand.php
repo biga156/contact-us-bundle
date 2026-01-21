@@ -6,6 +6,7 @@ namespace Caeligo\ContactUsBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\Mapping\MappingException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -96,11 +97,14 @@ class SetupCommand extends Command
 
         // Step 3: If database, ask about table/entity
         $usingBundleEntity = false;
+        $switchingFromBundleEntity = false;
         if (in_array($config['storage'], ['database', 'both'], true)) {
             $entityConfig = $this->askEntityConfiguration();
             if ($entityConfig) {
                 $config['entity'] = $entityConfig;
                 $usingBundleEntity = !($entityConfig['use_existing'] ?? false);
+                // Check if switching away from bundle entity to custom entity
+                $switchingFromBundleEntity = ($previousConfig && ($previousConfig['entity']['use_existing'] ?? false) === false) && !$usingBundleEntity;
             }
         }
 
@@ -123,6 +127,13 @@ class SetupCommand extends Command
         if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
             $crudRoutePrefix = $this->askCrudRoutePrefix();
             $config['crud_route_prefix'] = $crudRoutePrefix;
+        }
+
+        // Step 8: Offer cleanup of bundle table when:
+        // - Using email-only storage, OR
+        // - Switching from bundle entity to custom entity (database/both mode)
+        if ($config['storage'] === 'email' || $switchingFromBundleEntity) {
+            $this->offerBundleTableDropForEmailStorage();
         }
 
         // Save configuration
@@ -696,6 +707,88 @@ class SetupCommand extends Command
         ];
 
         return $config;
+    }
+
+    /**
+     * Offer dropping the bundle's table when storage is set to email-only or when switching from bundle entity to custom entity.
+     * This guards with a double confirmation (prompt + random code) to avoid accidental data loss.
+     */
+    private function offerBundleTableDropForEmailStorage(): void
+    {
+        if (!$this->entityManager) {
+            return;
+        }
+
+        $tableName = $this->getBundleTableName();
+        $schemaManager = $this->entityManager->getConnection()->createSchemaManager();
+
+        if (!$schemaManager->tablesExist([$tableName])) {
+            return;
+        }
+
+        $this->io->section('Database Cleanup');
+        $this->io->warning(sprintf("Detected bundle table '%s' while storage is set to email-only. This table is unused in email mode.", $tableName));
+
+        $confirmDrop = $this->io->confirm(
+            sprintf("Do you want to drop table '%s' and ALL of its data?", $tableName),
+            false
+        );
+
+        if (!$confirmDrop) {
+            return;
+        }
+
+        $code = $this->generateConfirmationCode();
+        $this->io->writeln(sprintf('Type this confirmation code to proceed: <info>%s</info>', $code));
+        $userCode = $this->io->ask('Confirmation code');
+
+        if ($userCode !== $code) {
+            $this->io->warning('Confirmation code mismatch. Table was NOT dropped.');
+            return;
+        }
+
+        try {
+            $schemaManager->dropTable($tableName);
+            $this->io->success(sprintf("Dropped table '%s'.", $tableName));
+        } catch (\Throwable $e) {
+            $this->io->error('Table drop failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Resolve the bundle's ContactMessage table name via Doctrine metadata when available.
+     */
+    private function getBundleTableName(): string
+    {
+        $default = 'contact_message';
+
+        if (!$this->entityManager) {
+            return $default;
+        }
+
+        $bundleEntity = 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity';
+
+        try {
+            $metadata = $this->entityManager->getClassMetadata($bundleEntity);
+            return $metadata->getTableName();
+        } catch (MappingException) {
+            return $default;
+        } catch (\Throwable) {
+            return $default;
+        }
+    }
+
+    private function generateConfirmationCode(int $length = 6): string
+    {
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        $max = strlen($alphabet) - 1;
+        $code = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $alphabet[random_int(0, $max)];
+        }
+
+        return $code;
     }
 
     /**

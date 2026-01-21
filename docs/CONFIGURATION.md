@@ -51,6 +51,12 @@ Storage mode for contact messages:
 
 **Note**: Database storage requires Doctrine ORM. When using the bundle entity with database/both storage, the bundle provides auto-imported admin CRUD routes (configured during setup wizard). When using your own entity, no CRUD routes are imported; you can wire your own controller or extend the bundle's abstract CRUD controller if desired.
 
+**Cleanup when using `email` storage or switching to custom entity:** The setup wizard checks if the bundle table already exists and offers to drop it with a double confirmation (prompt + short random code) when:
+- You switch to `email` storage (bundle table no longer needed)
+- You switch from bundle entity to a custom entity while staying in `database` or `both` mode (migrating off the bundle)
+
+Only the bundle-owned table is ever offered for removal; custom tables are never touched.
+
 ### crud_route_prefix
 Base URL path for admin CRUD routes (only used when `storage` is `database` or `both` AND using the bundle's `ContactMessageEntity`).
 Default: `/admin/contact`
@@ -139,6 +145,10 @@ contact_us:
         token_ttl: '24 hours'
 ```
 
+- When enabled, the sender **always** receives a verification email (containing their message and the confirmation link).
+- Admin notification is sent **only after** the sender verifies.
+- The sender does **not** get a second notification after verification; they already received the verification email.
+
 ### mailer
 Email sender configuration.
 
@@ -148,6 +158,8 @@ contact_us:
         from_email: 'noreply@example.com'
         from_name: 'My Company'
 ```
+
+- `send_copy_to_sender` is only honored when email verification is **disabled**. If email verification is enabled, the verification email already goes to the sender, and no extra copy is sent after verification.
 
 ## Environment Variables
 

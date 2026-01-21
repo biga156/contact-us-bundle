@@ -63,6 +63,8 @@ php bin/console contact:setup
 After setup completes, visit `/contact` to see the form.
 If you selected database storage with the bundle entity, admin CRUD routes are available by the selection in the setup wizard (for example. `/asmin/contact`) (auto-imported by the wizard).
 
+When you choose **email-only storage** or **switch to a custom entity**, the wizard detects if the bundle's table already exists and offers to drop it with a double confirmation (prompt + short random code) to avoid accidental data loss.
+
 ### 2. Or Use LiveComponent (no route import needed)
 
 ```twig
