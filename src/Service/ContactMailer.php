@@ -9,12 +9,15 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Service for sending contact form emails
  */
 class ContactMailer
 {
+    private const DEFAULT_LOCALE = 'en';
+
     /**
      * @param array<string> $recipients
      */
@@ -27,8 +30,78 @@ class ContactMailer
         private bool $enableAutoReply = false,
         private ?string $autoReplyFrom = null,
         private bool $sendCopyToSender = false,
-        private ?UrlGeneratorInterface $urlGenerator = null
+        private ?UrlGeneratorInterface $urlGenerator = null,
+        private ?TranslatorInterface $translator = null,
+        private string $defaultLocale = 'en'
     ) {
+    }
+
+    /**
+     * Translate a key with fallback to English
+     */
+    private function trans(string $key, array $params = []): string
+    {
+        if ($this->translator === null) {
+            return $this->extractPlainText($key);
+        }
+
+        // Try current locale first
+        $translated = $this->translator->trans($key, $params, 'contact_us');
+        
+        // If translation returns the key unchanged, try English
+        if ($translated === $key) {
+            $translated = $this->translator->trans($key, $params, 'contact_us', self::DEFAULT_LOCALE);
+        }
+        
+        // If still unchanged, extract plain text from key
+        if ($translated === $key) {
+            return $this->extractPlainText($key);
+        }
+        
+        return $translated;
+    }
+
+    /**
+     * Extract human-readable text from translation key
+     */
+    private function extractPlainText(string $key): string
+    {
+        $parts = explode('.', $key);
+        $lastPart = end($parts);
+        $text = preg_replace('/[_-]/', ' ', $lastPart);
+        return ucwords($text ?? '');
+    }
+
+    /**
+     * Get all translated labels for email templates
+     * @return array<string, string>
+     */
+    private function getTranslatedLabels(): array
+    {
+        return [
+            // Form field labels
+            'label_name' => $this->trans('contact.form.name'),
+            'label_email' => $this->trans('contact.form.email'),
+            'label_phone' => $this->trans('contact.form.phone'),
+            'label_subject' => $this->trans('contact.form.subject'),
+            'label_message' => $this->trans('contact.form.message'),
+            
+            // Verification email
+            'verification_title' => $this->trans('contact.verification.email_title'),
+            'verification_intro' => $this->trans('contact.verification.email_intro'),
+            'verification_your_message' => $this->trans('contact.verification.your_message'),
+            'verification_warning_title' => $this->trans('contact.verification.warning_title'),
+            'verification_warning_text' => $this->trans('contact.verification.warning_text'),
+            'verification_button' => $this->trans('contact.verification.verify_button'),
+            'verification_link_fallback' => $this->trans('contact.verification.link_fallback'),
+            'verification_footer' => $this->trans('contact.verification.footer_text'),
+            'verification_not_you' => $this->trans('contact.verification.not_you'),
+            
+            // Notification email
+            'notification_title' => $this->trans('contact.notification.title'),
+            'notification_intro' => $this->trans('contact.notification.intro'),
+            'notification_footer' => $this->trans('contact.notification.footer'),
+        ];
     }
 
     /**
@@ -40,6 +113,7 @@ class ContactMailer
     {
         $data = $message->getData();
         $subject = $this->buildSubject($data);
+        $labels = $this->getTranslatedLabels();
 
         $email = (new TemplatedEmail())
             ->from(new Address(
@@ -53,6 +127,7 @@ class ContactMailer
                 'message' => $message,
                 'data' => $data,
                 'subject' => $subject,
+                'labels' => $labels,
             ]);
 
         // Add recipients
@@ -60,8 +135,12 @@ class ContactMailer
             $email->addTo($recipient);
         }
 
-        // Optionally send the same notification to the sender (only if NOT using email verification)
-        if ($this->sendCopyToSender && !empty($data['email'])) {
+        // Send copy to sender ONLY if:
+        // 1. sendCopyToSender is enabled AND
+        // 2. Email verification was NOT used (message is not verified)
+        // If email verification is enabled, the sender already received the verification email
+        // which contains their message content, so no need to send another copy
+        if ($this->sendCopyToSender && !empty($data['email']) && !$message->isVerified()) {
             $email->addCc(new Address($data['email'], $data['name'] ?? ''));
         }
 
@@ -94,7 +173,8 @@ class ContactMailer
             throw new \RuntimeException('Cannot send verification email: sender email is missing');
         }
 
-        $subject = $this->buildSubject($data) . ' - Please verify your submission';
+        $labels = $this->getTranslatedLabels();
+        $subject = $this->buildSubject($data) . ' - ' . $this->trans('contact.verification.email_subject');
         
         // Generate verification URL
         $verificationUrl = $this->generateVerificationUrl($token);
@@ -114,6 +194,7 @@ class ContactMailer
                 'subject' => $subject,
                 'verificationUrl' => $verificationUrl,
                 'token' => $token,
+                'labels' => $labels,
             ]);
 
         $this->mailer->send($email);
@@ -149,18 +230,21 @@ class ContactMailer
             return;
         }
 
+        $labels = $this->getTranslatedLabels();
+
         $autoReply = (new TemplatedEmail())
             ->from(new Address(
                 $this->autoReplyFrom ?? $this->resolveFromEmail($data),
                 $this->fromName
             ))
             ->to(new Address($data['email'], $data['name'] ?? ''))
-            ->subject('Thank you for contacting us')
+            ->subject($this->trans('contact.auto_reply.subject'))
             ->htmlTemplate('@ContactUs/email/contact_auto_reply.html.twig')
             ->textTemplate('@ContactUs/email/contact_auto_reply.txt.twig')
             ->context([
                 'message' => $message,
                 'data' => $data,
+                'labels' => $labels,
             ]);
 
         $this->mailer->send($autoReply);

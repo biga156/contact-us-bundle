@@ -65,7 +65,9 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$enableAutoReply', false)
         ->arg('$autoReplyFrom', param('contact_us.mailer.from_email'))
         ->arg('$sendCopyToSender', param('contact_us.mailer.send_copy_to_sender'))
-        ->arg('$urlGenerator', service('router')->nullOnInvalid());
+        ->arg('$urlGenerator', service('router')->nullOnInvalid())
+        ->arg('$translator', service('translator')->nullOnInvalid())
+        ->arg('$defaultLocale', '%kernel.default_locale%');
 
     // CRUD Manager (bundle default)
     $services->set(ContactCrudManager::class)

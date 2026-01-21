@@ -7,10 +7,37 @@ namespace Caeligo\ContactUsBundle\DependencyInjection;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-class ContactUsExtension extends Extension
+class ContactUsExtension extends Extension implements PrependExtensionInterface
 {
+    /**
+     * Prepend configuration to ensure English translations are always available as fallback
+     */
+    public function prepend(ContainerBuilder $container): void
+    {
+        // Get existing framework configuration
+        $configs = $container->getExtensionConfig('framework');
+        
+        // Check if 'en' is already in fallbacks
+        $fallbacks = [];
+        foreach ($configs as $config) {
+            if (isset($config['translator']['fallbacks'])) {
+                $fallbacks = array_merge($fallbacks, (array) $config['translator']['fallbacks']);
+            }
+        }
+        
+        // Add 'en' to fallbacks if not present (bundle provides English translations by default)
+        if (!in_array('en', $fallbacks, true)) {
+            $container->prependExtensionConfig('framework', [
+                'translator' => [
+                    'fallbacks' => array_merge($fallbacks, ['en']),
+                ],
+            ]);
+        }
+    }
+
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();

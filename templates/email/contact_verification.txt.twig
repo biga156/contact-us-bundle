@@ -1,30 +1,50 @@
-{{ 'contact.verification.email_title'|trans({}, 'contact_us') }}
-============================================================
+{#
+    Email verification template (plain text)
+    Variables from ContactMailer:
+    - message: ContactMessage object
+    - data: array of form data
+    - subject: email subject
+    - verificationUrl: full URL for verification
+    - token: verification token
+    - labels: pre-translated labels array
+#}
+{{ labels.verification_title }}
+================================================================================
 
-{{ 'contact.verification.email_intro'|trans({}, 'contact_us') }}
+{{ labels.verification_intro }}
 
-{{ 'contact.verification.your_message'|trans({}, 'contact_us') }}:
-------------------------------------------------------------
+---
+{{ labels.verification_your_message }}
+---
 
-{{ 'contact.form.name'|trans({}, 'contact_us') }}: {{ message.get('name') }}
-{{ 'contact.form.email'|trans({}, 'contact_us') }}: {{ message.get('email') }}
-{% if message.get('phone') %}{{ 'contact.form.phone'|trans({}, 'contact_us') }}: {{ message.get('phone') }}
+{% if data.name is defined and data.name %}
+{{ labels.label_name }}: {{ data.name }}
 {% endif %}
-{% if message.get('subject') %}{{ 'contact.form.subject'|trans({}, 'contact_us') }}: {{ message.get('subject') }}
+{% if data.email is defined and data.email %}
+{{ labels.label_email }}: {{ data.email }}
 {% endif %}
-{{ 'contact.form.message'|trans({}, 'contact_us') }}:
-{{ message.get('message') }}
+{% if data.phone is defined and data.phone %}
+{{ labels.label_phone }}: {{ data.phone }}
+{% endif %}
+{% if data.subject is defined and data.subject %}
+{{ labels.label_subject }}: {{ data.subject }}
+{% endif %}
+{% if data.message is defined and data.message %}
 
-------------------------------------------------------------
+{{ labels.label_message }}:
+{{ data.message }}
+{% endif %}
 
-{{ 'contact.verification.warning_title'|trans({}, 'contact_us') }}
-{{ 'contact.verification.warning_text'|trans({}, 'contact_us') }}
+---
+⚠️ {{ labels.verification_warning_title }}
+---
+{{ labels.verification_warning_text }}
 
-{{ 'contact.verification.verify_button'|trans({}, 'contact_us') }}:
+---
+{{ labels.verification_button }}
+---
 {{ verificationUrl }}
 
-------------------------------------------------------------
-
-{{ 'contact.verification.footer_text'|trans({}, 'contact_us') }}
-
-{{ 'contact.verification.not_you'|trans({}, 'contact_us') }}
+---
+{{ labels.verification_footer }}
+{{ labels.verification_not_you }}

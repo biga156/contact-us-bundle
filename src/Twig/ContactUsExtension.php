@@ -16,6 +16,7 @@ use Twig\TwigFilter;
 class ContactUsExtension extends AbstractExtension implements GlobalsInterface
 {
     private bool $translationEnabled;
+    private const DEFAULT_LOCALE = 'en';
 
     /**
      * @param array<string, string> $templates
@@ -59,29 +60,54 @@ class ContactUsExtension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * Translate with fallback to plain text if translator unavailable
+     * Translate with fallback to English locale if translation not found
      * @param array<string, mixed> $parameters
      */
     public function translate(string $key, array $parameters = [], ?string $domain = null): string
     {
-        // If translation disabled, extract plain text from key
+        $domain = $domain ?: ($this->translation['domain'] ?? 'contact_us');
+
+        // If translation disabled or translator unavailable, use English fallback
         if (!$this->translationEnabled || $this->translator === null) {
-            return $this->extractPlainText($key);
+            return $this->getEnglishFallback($key, $parameters, $domain);
         }
 
-        $domain = $domain ?: $this->translation['domain'];
-        
         try {
             $translated = $this->translator->trans($key, $parameters, (string) $domain);
             
-            // If translation returns the key unchanged, use fallback
+            // If translation returns the key unchanged, try English fallback
+            if ($translated === $key) {
+                return $this->getEnglishFallback($key, $parameters, $domain);
+            }
+            
+            return $translated;
+        } catch (\Exception) {
+            // Fallback to English
+            return $this->getEnglishFallback($key, $parameters, $domain);
+        }
+    }
+
+    /**
+     * Get translation from English locale as fallback
+     * @param array<string, mixed> $parameters
+     */
+    private function getEnglishFallback(string $key, array $parameters, string $domain): string
+    {
+        if ($this->translator === null) {
+            return $this->extractPlainText($key);
+        }
+
+        try {
+            // Try to get translation from English locale explicitly
+            $translated = $this->translator->trans($key, $parameters, $domain, self::DEFAULT_LOCALE);
+            
+            // If still returns the key, use plain text extraction
             if ($translated === $key) {
                 return $this->extractPlainText($key);
             }
             
             return $translated;
         } catch (\Exception) {
-            // Fallback to plain text extraction
             return $this->extractPlainText($key);
         }
     }

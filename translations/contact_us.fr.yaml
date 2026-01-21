@@ -1,0 +1,77 @@
+# ContactUsBundle - French Translations (fallback to English)
+#
+# To override these translations in your application, create:
+# translations/contact_us.fr.yaml
+#
+# These are the default French translations provided by the bundle.
+# Currently using English as base - feel free to translate.
+
+contact:
+    title: 'Contact Us'
+    description: 'Fill out the form below and we will get back to you as soon as possible.'
+    submit: 'Send Message'
+    submit_loading: 'Sending...'
+    
+    # Success/Error messages
+    message:
+        success: 'Your message has been sent successfully. We will contact you soon.'
+        verification_sent: 'Thank you! A verification email has been sent to your email address. Please click the link in the email to confirm your message.'
+        error: 'An error occurred while sending your message. Please try again.'
+        spam_detected: 'Spam detected. Please try again later.'
+        rate_limit_exceeded: 'Too many requests. Please wait before submitting again.'
+        validation_failed: 'Please correct the errors in the form.'
+    
+    # Form field labels
+    field:
+        name: 'Name'
+        email: 'Email Address'
+        phone: 'Phone Number'
+        subject: 'Subject'
+        message: 'Message'
+    
+    # Form field labels (alternate)
+    form:
+        name: 'Name'
+        email: 'Email Address'
+        phone: 'Phone Number'
+        subject: 'Subject'
+        message: 'Message'
+        
+    # Privacy/GDPR notice
+    privacy_note: 'Your personal information will be processed according to our privacy policy.'
+    
+    # Email verification (spam protection)
+    verification:
+        # Flash messages
+        title: 'Email Verification Required'
+        message: 'We have sent a verification link to your email address. Please click the link to complete your submission.'
+        button: 'Verify Email'
+        expired: 'This verification link has expired or is invalid. Please submit the form again.'
+        invalid_token: 'Invalid verification link. Please submit the form again.'
+        success: 'Your email has been verified and your message has been sent!'
+        
+        # Verification email
+        email_subject: 'Please verify your contact message'
+        email_title: 'Verify Your Message'
+        email_intro: 'You submitted a contact message on our website. Please verify your email address to complete your submission.'
+        your_message: 'Your Message'
+        warning_title: 'Important!'
+        warning_text: 'If you did not submit this message, please ignore this email. The message will be automatically deleted.'
+        verify_button: 'Verify and Send Message'
+        link_fallback: 'If the button does not work, copy and paste this link into your browser:'
+        footer_text: 'This verification link will expire in 24 hours.'
+        not_you: 'If you did not request this, you can safely ignore this email.'
+        
+        # Verified page
+        verified_title: 'Message Verified!'
+        verified_message: 'Your email address has been verified successfully.'
+        verified_details: 'Your message has been delivered to our team. We will get back to you as soon as possible.'
+        error_title: 'Verification Failed'
+        error_details: 'Please submit the contact form again to send a new message.'
+        back_to_site: 'Back to Contact Form'
+        
+        # Admin CRUD
+        status: 'Verification Status'
+        status_verified: 'Verified'
+        status_pending: 'Pending Verification'
+        verified_at: 'Verified At'
