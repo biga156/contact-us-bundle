@@ -4,67 +4,69 @@
 
 {% block contact_body %}
 <div class="contact-admin-container">
-    <div class="contact-admin-header">
-        <h1>Contact Messages</h1>
-        <p>Listing stored contact submissions.</p>
-    </div>
+    <div class="contact-admin-card">
+        <div class="contact-admin-header">
+            <h1>Contact Messages</h1>
+            <p>Listing stored contact submissions.</p>
+        </div>
 
-    {% for message in app.flashes('contact_success') %}
-        <div class="alert alert-success" role="alert">{{ message|contact_trans }}</div>
-    {% endfor %}
-    {% for message in app.flashes('contact_error') %}
-        <div class="alert alert-danger" role="alert">{{ message|contact_trans }}</div>
-    {% endfor %}
+        {% for message in app.flashes('contact_success') %}
+            <div class="alert alert-success" role="alert">{{ message|contact_trans }}</div>
+        {% endfor %}
+        {% for message in app.flashes('contact_error') %}
+            <div class="alert alert-danger" role="alert">{{ message|contact_trans }}</div>
+        {% endfor %}
 
-    <div class="contact-admin-table-wrapper">
-        <table class="table contact-admin-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Subject</th>
-                    <th>Created</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for message in messages %}
-                <tr>
-                    <td>{{ message.id }}</td>
-                    <td>{{ message.get('name') }}</td>
-                    <td>{{ message.get('email') }}</td>
-                    <td>{{ message.get('subject') }}</td>
-                    <td>{{ message.createdAt ? message.createdAt|date('Y-m-d H:i') : '' }}</td>
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-secondary" href="{{ path('contact_us_admin_show', { id: message.id }) }}">View</a>
-                        <form method="post" action="{{ path('contact_us_admin_delete', { id: message.id }) }}" style="display:inline" onsubmit="return confirm('Delete this message?');">
-                            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="6" class="text-center">No messages found.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+        <div class="contact-admin-table-wrapper">
+            <table class="contact-admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for message in messages %}
+                    <tr>
+                        <td>{{ message.id }}</td>
+                        <td>{{ message.get('name') }}</td>
+                        <td>{{ message.get('email') }}</td>
+                        <td>{{ message.get('subject') }}</td>
+                        <td>{{ message.createdAt ? message.createdAt|date('Y-m-d H:i') : '' }}</td>
+                        <td class="contact-admin-actions">
+                            <a class="contact-button contact-button--ghost" href="{{ path('contact_us_admin_show', { id: message.id }) }}">View</a>
+                            <form class="contact-inline-form" method="post" action="{{ path('contact_us_admin_delete', { id: message.id }) }}" onsubmit="return confirm('Delete this message?');">
+                                <button class="contact-button contact-button--danger" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="contact-admin-empty">No messages found.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    <div class="contact-admin-pagination">
-        {% set totalPages = (total / limit)|round(0, 'ceil') %}
-        {% if totalPages > 1 %}
-            <nav aria-label="Pagination">
-                <ul class="pagination">
-                    {% for p in 1..totalPages %}
-                        <li class="page-item {{ p == page ? 'active' : '' }}">
-                            <a class="page-link" href="{{ path('contact_us_admin_index', { page: p, limit: limit }) }}">{{ p }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </nav>
-        {% endif %}
+        <div class="contact-admin-pagination">
+            {% set totalPages = (total / limit)|round(0, 'ceil') %}
+            {% if totalPages > 1 %}
+                <nav aria-label="Pagination">
+                    <ul class="contact-pagination">
+                        {% for p in 1..totalPages %}
+                            <li class="contact-pagination-item {{ p == page ? 'active' : '' }}">
+                                <a class="contact-page-link" href="{{ path('contact_us_admin_index', { page: p, limit: limit }) }}">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

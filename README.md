@@ -72,7 +72,7 @@ If you selected database storage with the bundle entity, admin CRUD routes are a
 
 ### 3. Customize Configuration (optional)
 
-Edit `config/packages/contact_us.yaml` to adjust recipients, storage, spam protection, and fields:
+Best practice: rerun `php bin/console contact:setup` when you need to change configuration so routes, migrations, and defaults stay in sync. You can still edit `config/packages/contact_us.yaml` by hand for most tweaks:
 
 ```yaml
 contact_us:
@@ -96,6 +96,8 @@ contact_us:
             constraints:
                 - Length: { min: 10, max: 5000 }
 ```
+
+Manual edits apply immediately in `dev`; in `prod` clear the cache after editing: `php bin/console cache:clear --no-warmup`. If you change `crud_route_prefix`, update the matching entry in `config/routes.yaml` (or rerun the setup wizard). If you switch `storage` to `database`/`both`, run a Doctrine migration (`doctrine:migrations:diff` then `doctrine:migrations:migrate`).
 
 ## Documentation
 
