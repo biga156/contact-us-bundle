@@ -125,8 +125,13 @@ class SetupCommand extends Command
         // Step 7: CRUD route prefix (only if database storage is enabled)
         $crudRoutePrefix = '/admin/contact';
         if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
-            $crudRoutePrefix = $this->askCrudRoutePrefix();
+            // Use previous prefix if updating, else use default
+            $defaultPrefix = $previousConfig['crud_route_prefix'] ?? '/admin/contact';
+            $crudRoutePrefix = $this->askCrudRoutePrefix($defaultPrefix);
             $config['crud_route_prefix'] = $crudRoutePrefix;
+        } elseif ($previousConfig && isset($previousConfig['crud_route_prefix'])) {
+            // Preserve existing CRUD prefix if not using bundle entity
+            $config['crud_route_prefix'] = $previousConfig['crud_route_prefix'];
         }
 
         // Step 8: Offer cleanup of bundle table when:
@@ -489,7 +494,7 @@ class SetupCommand extends Command
         ];
     }
 
-    private function askCrudRoutePrefix(): string
+    private function askCrudRoutePrefix(string $defaultPrefix = '/admin/contact'): string
     {
         $this->io->section('Admin CRUD Routes Configuration');
         $this->io->writeln('<fg=cyan>Specify the base URL path for admin CRUD routes</>');
@@ -498,7 +503,7 @@ class SetupCommand extends Command
 
         $prefix = $this->io->ask(
             'Base route prefix for admin CRUD',
-            '/admin/contact',
+            $defaultPrefix,
             function($input) {
                 // Validate: must start with /
                 if (!str_starts_with($input, '/')) {
