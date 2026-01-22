@@ -1040,13 +1040,21 @@ class SetupCommand extends Command
         }
 
         if ($alreadyImported) {
-            // Update existing routes - remove old contact_us_admin and add new one
-            // Find and remove the contact_us_admin section
+            // Update existing routes - remove all contact_us_admin keys
+            // First remove lines with # ContactUs Bundle Admin Routes comment and next section
             $content = preg_replace(
-                '/\n# ContactUs Bundle Admin Routes.*?(?=\n[a-z_]+:|$)/s',
+                '/^# ContactUs Bundle Admin Routes.*?$/m',
                 '',
                 $content
             );
+            // Remove all contact_us_admin: definitions with their content
+            $content = preg_replace(
+                '/^contact_us_admin:.*?(?=^[a-z_]+:|^$|\Z)/ms',
+                '',
+                $content
+            );
+            // Clean up multiple blank lines
+            $content = preg_replace('/\n{3,}/', "\n\n", $content);
             file_put_contents($routesFile, $content . $routeImport);
             $this->io->info('Admin CRUD routes updated in config/routes.yaml');
         } else {
