@@ -1004,10 +1004,7 @@ class SetupCommand extends Command
         }
 
         // Check if already imported
-        if (strpos($content, '@ContactUsBundle/config/routes_crud.php') !== false) {
-            $this->io->info('Admin routes already imported to config/routes.yaml');
-            return;
-        }
+        $alreadyImported = strpos($content, '@ContactUsBundle/config/routes_crud.php') !== false;
 
         // Parse existing routes to detect locale prefix pattern
         $existingConfig = Yaml::parse($content);
@@ -1042,8 +1039,21 @@ class SetupCommand extends Command
             $routeImport .= "        default: '{$crudRoutePrefix}'\n";
         }
 
-        file_put_contents($routesFile, $content . $routeImport);
-        $this->io->info('Admin CRUD routes imported to config/routes.yaml');
+        if ($alreadyImported) {
+            // Update existing routes - remove old contact_us_admin and add new one
+            // Find and remove the contact_us_admin section
+            $content = preg_replace(
+                '/\n# ContactUs Bundle Admin Routes.*?(?=\n[a-z_]+:|$)/s',
+                '',
+                $content
+            );
+            file_put_contents($routesFile, $content . $routeImport);
+            $this->io->info('Admin CRUD routes updated in config/routes.yaml');
+        } else {
+            // First time import
+            file_put_contents($routesFile, $content . $routeImport);
+            $this->io->info('Admin CRUD routes imported to config/routes.yaml');
+        }
     }
 
     /**
