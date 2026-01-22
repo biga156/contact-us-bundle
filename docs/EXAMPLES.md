@@ -148,15 +148,68 @@ contact_us_admin:
 
 Swap the CRUD manager to change data access without touching controllers:
 
+```php
+// src/Contact/MyCrudManager.php
+namespace App\Contact;
+
+use App\Entity\ContactMessageEntity; // your entity
+use Caeligo\ContactUsBundle\Model\ContactMessage;
+use Caeligo\ContactUsBundle\Service\Crud\CrudManagerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+
+class MyCrudManager implements CrudManagerInterface
+{
+    public function __construct(private EntityManagerInterface $em) {}
+
+    public function list(int $page = 1, int $limit = 20): iterable
+    {
+        return $this->em->getRepository(ContactMessageEntity::class)
+            ->createQueryBuilder('c')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->orderBy('c.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function count(): int
+    {
+        return (int) $this->em->getRepository(ContactMessageEntity::class)
+            ->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function find(int $id): ?ContactMessage
+    {
+        $entity = $this->em->find(ContactMessageEntity::class, $id);
+        return $entity?->toModel(); // implement toModel() on your entity, or map manually
+    }
+
+    public function delete(ContactMessage $message): void
+    {
+        $entity = $this->em->find(ContactMessageEntity::class, $message->getId());
+        if ($entity) {
+            $this->em->remove($entity);
+            $this->em->flush();
+        }
+    }
+}
+```
+
+Wire it:
+
 ```yaml
 # config/services.yaml
 services:
   App\Contact\MyCrudManager: ~
-
   Caeligo\ContactUsBundle\Service\Crud\CrudManagerInterface: '@App\Contact\MyCrudManager'
 ```
 
-Your manager must implement `CrudManagerInterface` (`list/count/find/delete`).
+Notes:
+- Expose a `toModel()` helper on your entity (or map to `ContactMessage` manually).
+- You can add filters, sorting, or security checks inside `list/find/delete`.
 
 ---
 
@@ -226,25 +279,77 @@ Register subscribers as services (Symfony autoconfiguration usually does it auto
 
 When you choose BOTH mode and select a custom entity in the setup wizard:
 
-- Ensure your entity can map to the bundle model. Doctrine storage maps via `setData()`/`getData()` when available; otherwise it tries common getters/setters (`getTitle/getEmail/getSubtitle/getBody/getPhone`, etc.).
+- Ensure your entity can map to the bundle model. Doctrine storage maps via `setData()/getData()` when available; otherwise it tries common getters/setters (`getTitle/getEmail/getSubtitle/getBody/getPhone`, etc.).
 - If you enable email verification, your entity should have fields to store verification data (e.g., `verificationToken`, `verified`, `verifiedAt`). If you don’t have them, disable email verification or extend your entity accordingly.
 - Implement an identifier getter (`getId()`); it’s used to round‑trip model IDs.
 - Ensure your repository can find by verification token if you plan to use verification.
 - Migrations: create/adjust your schema accordingly; the wizard only generates migrations for the bundle entity.
 
-Minimal custom entity outline:
+### Recommended minimal properties (works with default form fields)
+- `id` (int, identifier)
+- `data` (json/array) — recommended; stores all dynamic form fields
+- `name`, `email`, `subject`, `message`, `phone` (string, nullable) — only needed if you don’t keep a `data` blob; setters/getters should match your form keys
+- `ipAddress` (string, nullable)
+- `userAgent` (string, nullable)
+- `verified` (bool)
+- `verificationToken` (string, nullable, unique if used)
+- `verifiedAt` (datetime_immutable, nullable)
 
+### Quick-start: copy/pasteable skeleton
 ```php
 /** @Entity */
 class MyContactMessage
 {
     /** @Id @GeneratedValue @Column(type="integer") */
     private ?int $id = null;
+
     /** @Column(type="json") */
     private array $data = [];
-    /** @Column(type="string", nullable=true) */
+
+    /** @Column(type="string", length=255, nullable=true) */
     private ?string $ipAddress = null;
-    /** @Column(type="string", nullable=true) */
+
+    /** @Column(type="string", length=512, nullable=true) */
+    private ?string $userAgent = null;
+
+    /** @Column(type="boolean") */
+    private bool $verified = false;
+
+    /** @Column(type="string", length=128, nullable=true, unique=true) */
+    private ?string $verificationToken = null;
+
+    /** @Column(type="datetime_immutable", nullable=true) */
+    private ?\DateTimeImmutable $verifiedAt = null;
+
+    // Optional explicit fields if you prefer not to rely solely on `data`
+    /** @Column(type="string", length=180, nullable=true) */
+    private ?string $name = null;
+    /** @Column(type="string", length=180, nullable=true) */
+    private ?string $email = null;
+    /** @Column(type="string", length=200, nullable=true) */
+    private ?string $subject = null;
+    /** @Column(type="text", nullable=true) */
+    private ?string $message = null;
+    /** @Column(type="string", length=50, nullable=true) */
+    private ?string $phone = null;
+
+    // getters/setters ... including getId(), getData()/setData() (recommended)
+}
+```
+
+### Optional helper trait (copy into your project)
+Use this if you want a minimal drop-in to reduce boilerplate (adjust namespaces/attributes as needed):
+
+```php
+trait ContactMessageFields
+{
+    /** @Id @GeneratedValue @Column(type="integer") */
+    private ?int $id = null;
+    /** @Column(type="json") */
+    private array $data = [];
+    /** @Column(type="string", length=255, nullable=true) */
+    private ?string $ipAddress = null;
+    /** @Column(type="string", length=512, nullable=true) */
     private ?string $userAgent = null;
     /** @Column(type="boolean") */
     private bool $verified = false;
@@ -253,7 +358,19 @@ class MyContactMessage
     /** @Column(type="datetime_immutable", nullable=true) */
     private ?\DateTimeImmutable $verifiedAt = null;
 
-    // getters/setters ... including getId(), getData()/setData() (recommended)
+    public function getId(): ?int { return $this->id; }
+    public function getData(): array { return $this->data; }
+    public function setData(array $data): self { $this->data = $data; return $this; }
+    public function getIpAddress(): ?string { return $this->ipAddress; }
+    public function setIpAddress(?string $ip): self { $this->ipAddress = $ip; return $this; }
+    public function getUserAgent(): ?string { return $this->userAgent; }
+    public function setUserAgent(?string $ua): self { $this->userAgent = $ua; return $this; }
+    public function isVerified(): bool { return $this->verified; }
+    public function setVerified(bool $v): self { $this->verified = $v; return $this; }
+    public function getVerificationToken(): ?string { return $this->verificationToken; }
+    public function setVerificationToken(?string $t): self { $this->verificationToken = $t; return $this; }
+    public function getVerifiedAt(): ?\DateTimeImmutable { return $this->verifiedAt; }
+    public function setVerifiedAt(?\DateTimeImmutable $at): self { $this->verifiedAt = $at; return $this; }
 }
 ```
 
