@@ -117,6 +117,7 @@ Manual edits apply immediately in `dev`; in `prod` clear the cache after editing
 - [📖 Installation Guide](docs/INSTALLATION.md)
 - [⚙️ Configuration Reference](docs/CONFIGURATION.md)
 - [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
+- [🧩 Practical Examples](docs/EXAMPLES.md) - **Copy‑pasteable recipes**
 - [🌍 Translation Guide](docs/TRANSLATION.md) - **Multi-language support (optional)**
 - [🧪 Testing Guide](docs/TESTING.md) - **Unit, functional & integration tests**
 
