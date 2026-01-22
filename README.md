@@ -11,7 +11,7 @@ A highly configurable Symfony bundle for contact forms with multiple UI variants
 - 🎨 **Multiple UI Variants** - LiveComponent, plain Symfony form, or REST API for external frontends
 - 📝 **YAML-driven form configuration** - Define fields, validation, and options in config
 - 📧 **Flexible delivery** - Email notification, database storage, or both
-- 🛡️ **Multi-layer spam protection** - Honeypot, rate limiting, timing checks, optional third-party captcha
+- 🛡️ **Multi-layer spam protection** - Honeypot, rate limiting, timing checks (captcha integrations planned)
 - ♿ **Accessibility-first** - WCAG 2.1 AA compliant, no visual-only captchas
 - 🎭 **Themeable templates** - Easy customization with Twig blocks
 - 🌍 **Multilingual** - Optional translation support with auto-detect (works without symfony/translation)
@@ -61,7 +61,7 @@ php bin/console contact:setup
 ```
 
 After setup completes, visit `/contact` to see the form.
-If you selected database storage with the bundle entity, admin CRUD routes are available by the selection in the setup wizard (for example. `/asmin/contact`) (auto-imported by the wizard).
+If you selected database storage, the wizard uses the bundle’s built‑in entity and auto‑imports admin CRUD routes (e.g., `/admin/contact`, configurable during the wizard).
 
 When you choose **email-only storage** or **switch to a custom entity**, the wizard detects if the bundle's table already exists and offers to drop it with a double confirmation (prompt + short random code) to avoid accidental data loss.
 
@@ -87,9 +87,9 @@ contact_us:
             interval: '15 minutes'
         min_submit_time: 3
         captcha:
-            provider: none   # none|turnstile|hcaptcha|recaptcha|friendly
-            site_key: ~      # set when provider is enabled
-            secret_key: ~    # set when provider is enabled
+            provider: none   # captcha integrations planned; currently disabled
+            site_key: ~
+            secret_key: ~
     email_verification:
         enabled: false       # only applicable when storage=both
         token_ttl: '24 hours'

@@ -45,9 +45,13 @@ and adjust the loop. Keep the hidden fields (`email_confirm`, `_form_token_time`
 
 ### Overriding CRUD Logic (Database Storage)
 
+In `database` mode, the bundle’s built‑in `ContactMessageEntity` is always used and admin CRUD routes are auto‑imported. You can still customize behavior:
+
 - **Controller**: Extend `Caeligo\ContactUsBundle\Controller\Admin\AbstractContactCrudController` in your app and point the routes to your controller if you need to change flows or responses.
 - **Service**: Replace the `CrudManagerInterface` alias with your own service to change persistence/lookup behavior without touching controllers.
 - **Events**: Listen to `contact_us.crud.list`, `contact_us.crud.show`, and `contact_us.crud.delete` for lightweight adjustments (e.g., filtering, audit logging) without overriding anything.
+
+If you need to use a custom entity, choose `both` storage during setup and select your entity there; CRUD routes are not auto‑imported for custom entities.
 
 ### Directory Structure
 

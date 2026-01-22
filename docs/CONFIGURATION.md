@@ -49,7 +49,9 @@ Storage mode for contact messages:
 - `database` - Save to database only (no mailer needed)
 - `both` - Send email and save to database
 
-**Note**: Database storage requires Doctrine ORM. When using the bundle entity with database/both storage, the bundle provides auto-imported admin CRUD routes (configured during setup wizard). When using your own entity, no CRUD routes are imported; you can wire your own controller or extend the bundle's abstract CRUD controller if desired.
+**Note**: Database storage requires Doctrine ORM. In `database` mode, the setup wizard always uses the bundle’s built‑in `ContactMessageEntity` (no custom entity selection). In `both` mode you may choose between the bundle entity and an existing/custom entity.
+
+When using the bundle entity, the bundle provides auto-imported admin CRUD routes (configured during the setup wizard). When using your own entity (only applicable in `both` mode), no CRUD routes are imported; you can wire your own controller or extend the bundle's abstract CRUD controller if desired.
 
 **Cleanup when using `email` storage or switching to custom entity:** The setup wizard checks if the bundle table already exists and offers to drop it with a double confirmation (prompt + short random code) when:
 - You switch to `email` storage (bundle table no longer needed)
@@ -77,7 +79,7 @@ Routes will be available at:
 ### spam_protection
 
 Base protections are always enabled by default: **Honeypot**, **Timing check**, and **Rate limiting**.
-You can optionally enable a captcha provider. Email verification is configured separately and only applies when `storage: both`.
+Captcha configuration is currently unavailable in the setup wizard and defaults to `provider: none`. Email verification is configured separately and only applies when `storage: both`.
 
 #### rate_limit
 - `limit`: Maximum submissions per interval (default: 3)
@@ -87,9 +89,9 @@ You can optionally enable a captcha provider. Email verification is configured s
 Minimum seconds between form load and submission (default: 3)
 
 #### captcha
-- `provider`: none, turnstile, hcaptcha, friendly, recaptcha
-- `site_key`: Public key for captcha provider
-- `secret_key`: Secret key for captcha provider
+- `provider`: `none` (captcha integrations planned; currently disabled)
+- `site_key`: `~`
+- `secret_key`: `~`
 
 ### fields
 Define custom form fields with validation. The defaults include `name`, `email`, `subject`, and `message`.

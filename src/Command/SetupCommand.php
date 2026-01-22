@@ -95,10 +95,19 @@ class SetupCommand extends Command
             ? $this->askRecipients()
             : [];
 
-        // Step 3: If database, ask about table/entity
+        // Step 3: Entity selection
+        // In database mode, always use the bundle's built-in entity (no custom entity selection).
+        // In both mode, allow choosing between bundle entity and an existing/custom entity.
         $usingBundleEntity = false;
         $switchingFromBundleEntity = false;
-        if (in_array($config['storage'], ['database', 'both'], true)) {
+        if ($config['storage'] === 'database') {
+            $config['entity'] = [
+                'use_existing' => false,
+                'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity',
+            ];
+            $usingBundleEntity = true;
+            $switchingFromBundleEntity = false;
+        } elseif ($config['storage'] === 'both') {
             $entityConfig = $this->askEntityConfiguration();
             if ($entityConfig) {
                 $config['entity'] = $entityConfig;
@@ -537,28 +546,12 @@ class SetupCommand extends Command
         $this->io->text('Base protections are always enabled: Honeypot, Timing check, and Rate limiting.');
         $this->io->newLine();
 
-        // Ask only about captcha enablement
-        $enableCaptcha = $this->io->confirm('Enable captcha protection?', false);
-
+        // Captcha configuration is currently unavailable in the wizard; defaults to disabled.
         $captcha = [
             'provider' => 'none',
             'site_key' => null,
             'secret_key' => null,
         ];
-
-        if ($enableCaptcha) {
-            $provider = $this->io->choice(
-                'Select captcha provider',
-                ['turnstile', 'hcaptcha', 'recaptcha', 'friendly'],
-                'turnstile'
-            );
-
-            $captcha['provider'] = $provider;
-
-            // Ask for keys when relevant
-            $captcha['site_key'] = $this->io->ask('Captcha site/public key', null);
-            $captcha['secret_key'] = $this->io->ask('Captcha secret key', null);
-        }
 
         return [
             'rate_limit' => [
