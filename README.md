@@ -8,14 +8,14 @@ A highly configurable Symfony bundle for contact forms with multiple UI variants
 
 ## Features
 
-- 🎨 **Multiple UI variants** - LiveComponent, plain Symfony form
+- 🎨 **Multiple UI Variants** - LiveComponent, plain Symfony form, or REST API for external frontends
 - 📝 **YAML-driven form configuration** - Define fields, validation, and options in config
 - 📧 **Flexible delivery** - Email notification, database storage, or both
-- 🛡️ **Built-in spam protection** - Honeypot, rate limiting, timing checks
-- ♿ **Accessibility-first** - WCAG 2.1 AA compliant
+- 🛡️ **Multi-layer spam protection** - Honeypot, rate limiting, timing checks, optional third-party captcha
+- ♿ **Accessibility-first** - WCAG 2.1 AA compliant, no visual-only captchas
 - 🎭 **Themeable templates** - Easy customization with Twig blocks
 - 🌍 **Multilingual** - Optional translation support with auto-detect (works without symfony/translation)
-- 🔌 **Pluggable architecture** - Events, storage adapters, extensible validators
+- 🔌 **Pluggable architecture** - Events, storage adapters, captcha providers
 - 🚀 **Zero-build assets** - Works with Symfony AssetMapper (6.4+)
 - 🗂️ **Built-in admin CRUD** - Database storage ships with an overridable CRUD for the bundle entity
 
@@ -119,7 +119,6 @@ Manual edits apply immediately in `dev`; in `prod` clear the cache after editing
 - [🎨 Customization & Theming](docs/CUSTOMIZATION.md) - **How to integrate with your app's design**
 - [🌍 Translation Guide](docs/TRANSLATION.md) - **Multi-language support (optional)**
 - [🧪 Testing Guide](docs/TESTING.md) - **Unit, functional & integration tests**
-- [🧩 Examples](docs/EXAMPLES.md) - **Copy-paste snippets for common setups**
 
 ## Template Customization
 
@@ -173,17 +172,6 @@ Test coverage includes:
 - ✅ **Integration tests** - Complete workflows (requires Symfony app)
 
 **See the [Testing Guide](docs/TESTING.md) for complete documentation.**
-
-## Future Features
-
-The following features are planned for future releases and are not yet available:
-
-- 🔐 **Third-party captcha integration** - Turnstile, hCaptcha, reCAPTCHA, FriendlyCaptcha support
-- 🌐 **REST API endpoints** - Headless/SPA usage with JSON responses
-- 🎛️ **EasyAdmin integration** - Auto-generation of EasyAdmin CRUD controllers
-- 📱 **LiveComponent UI** - Real-time form validation and submission without page reload
-
-**Contributions welcome!** If you'd like to help implement these features or have ideas for new ones, please open an issue or pull request. We're also looking for testers and feedback from real-world usage.
 
 ## License
 

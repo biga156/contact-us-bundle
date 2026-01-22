@@ -48,15 +48,6 @@ class ContactController extends AbstractController
                 return $this->redirectToRoute('contact_us_form');
             } catch (\RuntimeException $e) {
                 $this->addFlash('contact_error', $e->getMessage());
-            } catch (\Exception $e) {
-                // Log the full exception for debugging
-                if ($this->container->has('logger')) {
-                    $this->container->get('logger')->error('Contact form submission error', [
-                        'exception' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                }
-                $this->addFlash('contact_error', 'An error occurred while processing your message. Please try again later.');
             }
         }
 

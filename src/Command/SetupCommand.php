@@ -45,10 +45,6 @@ class SetupCommand extends Command
             $config = $this->buildNonInteractiveConfig();
 
             $this->saveConfiguration($config);
-            
-            // Create dev-specific override with auto_sync enabled
-            $this->createDevAutoSyncConfig();
-            
             $this->importRoutesToConfig();
             if ($config['storage'] === 'database' || $config['storage'] === 'both') {
                 $this->importCrudRoutesToConfig();
@@ -91,161 +87,70 @@ class SetupCommand extends Command
 
         $config = [];
 
-        // ============================================================
-        // STEP 1: Storage Mode Selection (DRIVES THE REST OF THE FLOW)
-        // ============================================================
+        // Step 1: Storage mode (drives the rest of the flow)
         $config['storage'] = $this->askStorageMode();
 
-        // Check dependencies based on storage mode
-        $depCheck = $this->checkDependencies($config['storage']);
-        if (!$depCheck['continue']) {
-            $this->io->error('Setup cancelled due to missing dependencies.');
-            return Command::FAILURE;
-        }
+        // Step 2: Recipients (only when email delivery is enabled)
+        $config['recipients'] = in_array($config['storage'], ['email', 'both'], true)
+            ? $this->askRecipients()
+            : [];
 
-        // ============================================================
-        // MODE-SPECIFIC WORKFLOW
-        // ============================================================
-        
+        // Step 3: If database, ask about table/entity
         $usingBundleEntity = false;
         $switchingFromBundleEntity = false;
-        $generateEasyAdminController = false;
-
-        // EMAIL MODE: Only email delivery, no entity
-        if ($config['storage'] === 'email') {
-            // Recipients + CONTACT_EMAIL
-            $config['recipients'] = $this->askRecipients();
-            
-            // Mailer config
-            $config['mailer'] = $this->askMailerConfiguration([]);
-            
-            // Spam protection
-            $config['spam_protection'] = $this->askSpamProtection($config['storage']);
-            
-            // Email verification
-            $config['email_verification'] = $this->askEmailVerification($config['storage']);
-            
-            // Form fields (default)
-            $config['fields'] = $this->getDefaultFields();
-            
-            // Table cleanup (if coming from database mode)
-            if ($previousConfig && in_array($previousConfig['storage'] ?? null, ['database', 'both'], true)) {
-                $this->offerBundleTableDropForEmailStorage();
-            }
-        }
-        
-        // DATABASE-ONLY MODE: Only bundle entity storage, no email
-        elseif ($config['storage'] === 'database') {
-            // Bundle entity only (custom not available in database-only mode)
-            $config['entity'] = [
-                'use_existing' => false,
-                'class' => 'Caeligo\\ContactUsBundle\\Entity\\ContactMessage',
-            ];
-            $usingBundleEntity = true;
-            
-            // Form fields from bundle entity
-            $config['fields'] = $this->askFormFields($config['entity']);
-            
-            // Spam protection
-            $config['spam_protection'] = $this->askSpamProtection($config['storage']);
-            
-            // No email verification in database-only mode
-            $config['email_verification'] = ['enabled' => false];
-            
-            // No mailer config needed
-            $config['mailer'] = $this->buildMailerDefaults();
-            
-            // No recipients in database-only mode
-            $config['recipients'] = [];
-            
-            // CRUD route prefix
-            $crudRoutePrefix = $this->askCrudRoutePrefix();
-            $config['crud_route_prefix'] = $crudRoutePrefix;
-            
-            // Migration check
-            $config['migration_check'] = true;
-        }
-        
-        // BOTH MODE: Email + Database (bundle OR custom entity)
-        elseif ($config['storage'] === 'both') {
-            // Entity configuration (bundle OR custom)
+        if (in_array($config['storage'], ['database', 'both'], true)) {
             $entityConfig = $this->askEntityConfiguration();
             if ($entityConfig) {
                 $config['entity'] = $entityConfig;
                 $usingBundleEntity = !($entityConfig['use_existing'] ?? false);
-                
-                // Check if switching from bundle to custom entity
-                $switchingFromBundleEntity = ($previousConfig 
-                    && ($previousConfig['entity']['use_existing'] ?? false) === false) 
-                    && !$usingBundleEntity;
-            }
-            
-            // CRUD route prefix
-            if ($usingBundleEntity) {
-                $crudRoutePrefix = $this->askCrudRoutePrefix();
-                $config['crud_route_prefix'] = $crudRoutePrefix;
-            }
-            
-            // Form fields (based on selected entity)
-            $config['fields'] = $this->askFormFields($config['entity'] ?? null);
-            
-            // Recipients + CONTACT_EMAIL
-            $config['recipients'] = $this->askRecipients();
-            
-            // Mailer config
-            $emailVerificationConfig = $this->askEmailVerification($config['storage']);
-            $config['email_verification'] = $emailVerificationConfig;
-            $config['mailer'] = $this->askMailerConfiguration($emailVerificationConfig);
-            
-            // Spam protection
-            $config['spam_protection'] = $this->askSpamProtection($config['storage']);
-            
-            // Migration check
-            if ($usingBundleEntity) {
-                $config['migration_check'] = true;
-            }
-            
-            // Table cleanup (if switching from bundle to custom)
-            if ($switchingFromBundleEntity) {
-                $this->offerBundleTableDropForEmailStorage();
+                // Check if switching away from bundle entity to custom entity
+                $switchingFromBundleEntity = ($previousConfig && ($previousConfig['entity']['use_existing'] ?? false) === false) && !$usingBundleEntity;
             }
         }
 
-        // ============================================================
-        // SAVE CONFIGURATION & AUTO-SYNC SETUP
-        // ============================================================
-        
-        // Add auto_sync_on_cache_clear to config (defaults)
-        // Will be set in base config (false) and dev config (true)
-        $config['auto_sync_on_cache_clear'] = false; // prod-safe default
-        
-        // Save main configuration
+        // Step 4: Form fields (auto-detect or manual)
+        $config['fields'] = $this->askFormFields($config['entity'] ?? null);
+
+        // Step 5: Spam protection (base protections always enabled)
+        $config['spam_protection'] = $this->askSpamProtection($config['storage']);
+
+        // Step 6: Email verification (only in BOTH storage mode)
+        $config['email_verification'] = $this->askEmailVerification($config['storage']);
+
+        // Step 7: Mailer configuration (skip for database-only)
+        $config['mailer'] = in_array($config['storage'], ['email', 'both'], true)
+            ? $this->askMailerConfiguration($config['email_verification'])
+            : $this->buildMailerDefaults();
+
+        // Step 7: CRUD route prefix (only if database storage is enabled)
+        $crudRoutePrefix = '/admin/contact';
+        if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
+            $crudRoutePrefix = $this->askCrudRoutePrefix();
+            $config['crud_route_prefix'] = $crudRoutePrefix;
+        }
+
+        // Step 8: Offer cleanup of bundle table when:
+        // - Using email-only storage, OR
+        // - Switching from bundle entity to custom entity (database/both mode)
+        if ($config['storage'] === 'email' || $switchingFromBundleEntity) {
+            $this->offerBundleTableDropForEmailStorage();
+        }
+
+        // Save configuration
         $this->saveConfiguration($config);
-        
-        // Create dev-specific override with auto_sync enabled
-        $this->createDevAutoSyncConfig();
-        
-        // Import routes
         $this->importRoutesToConfig();
-        if ($usingBundleEntity) {
+        if ($usingBundleEntity && in_array($config['storage'], ['database', 'both'], true)) {
             $crudPrefix = $config['crud_route_prefix'] ?? '/admin/contact';
             $this->importCrudRoutesToConfig($crudPrefix);
         }
-        
-        // Clear cache
         $this->clearCacheAndCompileAssets();
 
-        // ============================================================
-        // POST-SETUP ACTIONS
-        // ============================================================
-        
         $this->io->success('ContactUs bundle configuration saved successfully!');
         $this->io->info('Configuration file: config/packages/contact_us.yaml');
-        $this->io->info('Dev configuration: config/packages/dev/contact_us.yaml (auto_sync enabled)');
         $this->io->info('Routes imported to: config/routes.yaml');
         $this->io->info('Cache cleared and assets compiled.');
         
-        // Handle migrations if using bundle entity
+        // Handle migrations if using bundle's own entity
         if ($usingBundleEntity) {
             if ($this->io->confirm('Would you like to generate and run migrations now?', true)) {
                 $this->handleMigrations();
@@ -262,13 +167,12 @@ class SetupCommand extends Command
             $this->io->info('You selected an existing entity - no migration needed.');
         }
         
-        // Next steps
         $this->io->section('Next Steps');
         $this->io->writeln('<info>The contact form is now available at:</info>');
         $this->io->writeln('  • <fg=green>/contact</> (GET|POST) - Contact form page');
         $this->io->writeln('  • LiveComponent: {{ component(\'ContactUs\') }} in your templates');
 
-        // List CRUD admin routes if database or both mode with bundle entity
+        // List CRUD admin routes if database or both mode
         if (in_array($config['storage'], ['database', 'both'], true) && $usingBundleEntity) {
             $crudPrefix = $config['crud_route_prefix'] ?? '/admin/contact';
             $this->io->section('Admin CRUD Routes');
@@ -280,11 +184,6 @@ class SetupCommand extends Command
                 "<fg=cyan>{$crudPrefix}/<id>/delete</> (POST) - Delete message",
             ]);
         }
-        
-        // Auto-sync info
-        $this->io->section('Auto-Sync Configuration');
-        $this->io->info('In development environment, configuration will auto-sync on cache:clear.');
-        $this->io->info('In production, run: <comment>php bin/console contact:config:sync</comment>');
 
         return Command::SUCCESS;
     }
@@ -369,8 +268,8 @@ class SetupCommand extends Command
         $existingEntities = $this->findContactMessageEntities();
 
         if (empty($existingEntities)) {
-            $this->io->warning('No entities found in your application.');
-            $this->io->info('Please create a custom entity or use the bundle\'s entity.');
+            $this->io->warning('No existing ContactMessage entities found in your application.');
+            $this->io->info('Please create an entity that implements ContactMessage contract or use the bundle\'s entity.');
             $fallback = $this->io->confirm('Fall back to bundle\'s ContactMessageEntity?', true);
             
             if ($fallback) {
@@ -383,8 +282,7 @@ class SetupCommand extends Command
             return null;
         }
 
-        $this->io->info('Available entities in your application:');
-        $this->io->comment('Select any entity - you will configure property mapping in the next step.');
+        $this->io->info('Available ContactMessage entities:');
         $this->io->listing($existingEntities);
 
         $entityClass = $this->io->choice('Select entity to use', $existingEntities);
@@ -399,12 +297,6 @@ class SetupCommand extends Command
     /**
      * @return array<string>
      */
-    /**
-     * Find ALL entities in the application (no filtering)
-     * Developer will choose which one to use for contact form
-     * 
-     * @return array<string>
-     */
     private function findContactMessageEntities(): array
     {
         if (!$this->entityManager) {
@@ -416,18 +308,17 @@ class SetupCommand extends Command
 
         foreach ($allMetadata as $metadata) {
             $className = $metadata->getName();
-            // Skip bundle's own entity (already offered as default option)
-            if ($className === 'Caeligo\\ContactUsBundle\\Entity\\ContactMessageEntity') {
-                continue;
+            if (str_contains(strtolower($className), 'contactmessage')) {
+                $entities[] = $className;
             }
-            // List ALL entities (no filtering by name)
-            $entities[] = $className;
         }
 
-        sort($entities);
         return $entities;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function getEntityMetadata(string $entityClass): array
     {
         if (!$this->entityManager) {
@@ -457,14 +348,7 @@ class SetupCommand extends Command
     {
         $this->io->section('Form Fields Configuration');
 
-        // If custom entity is configured (use_existing = true), use property mapping
-        if ($entityConfig && isset($entityConfig['use_existing']) && $entityConfig['use_existing'] === true) {
-            if (isset($entityConfig['metadata']) && isset($entityConfig['class'])) {
-                return $this->askPropertyMapping($entityConfig['metadata'], $entityConfig['class']);
-            }
-        }
-
-        // If bundle entity is configured, auto-detect fields
+        // If entity is configured, auto-detect fields
         if ($entityConfig && isset($entityConfig['metadata'])) {
             $autoDetect = $this->io->confirm('Auto-detect form fields from entity?', true);
 
@@ -473,7 +357,7 @@ class SetupCommand extends Command
             }
         }
 
-        // Manual field configuration / default fields
+        // Manual field configuration
         $this->io->info('Using default fields (name, email, subject, message).');
         $useDefaults = $this->io->confirm('Use default field configuration?', true);
 
@@ -485,6 +369,10 @@ class SetupCommand extends Command
         return $this->getDefaultFields();
     }
 
+    /**
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>
+     */
     private function generateFieldsFromEntity(array $metadata): array
     {
         $fields = [];
@@ -644,12 +532,36 @@ class SetupCommand extends Command
         $this->io->text('Base protections are always enabled: Honeypot, Timing check, and Rate limiting.');
         $this->io->newLine();
 
+        // Ask only about captcha enablement
+        $enableCaptcha = $this->io->confirm('Enable captcha protection?', false);
+
+        $captcha = [
+            'provider' => 'none',
+            'site_key' => null,
+            'secret_key' => null,
+        ];
+
+        if ($enableCaptcha) {
+            $provider = $this->io->choice(
+                'Select captcha provider',
+                ['turnstile', 'hcaptcha', 'recaptcha', 'friendly'],
+                'turnstile'
+            );
+
+            $captcha['provider'] = $provider;
+
+            // Ask for keys when relevant
+            $captcha['site_key'] = $this->io->ask('Captcha site/public key', null);
+            $captcha['secret_key'] = $this->io->ask('Captcha secret key', null);
+        }
+
         return [
             'rate_limit' => [
                 'limit' => 3,
                 'interval' => '15 minutes',
             ],
             'min_submit_time' => 3,
+            'captcha' => $captcha,
         ];
     }
 
@@ -777,7 +689,11 @@ class SetupCommand extends Command
                 'interval' => '15 minutes',
             ],
             'min_submit_time' => 3,
-
+            'captcha' => [
+                'provider' => 'none',
+                'site_key' => null,
+                'secret_key' => null,
+            ],
         ];
         $config['email_verification'] = [
             'enabled' => false,
@@ -789,8 +705,6 @@ class SetupCommand extends Command
             'subject_prefix' => '[Contact Form]',
             'send_copy_to_sender' => false,
         ];
-        $config['crud_route_prefix'] = '/admin/contact';
-        $config['auto_sync_on_cache_clear'] = false;
 
         return $config;
     }
@@ -956,7 +870,10 @@ class SetupCommand extends Command
         $yaml .= "      limit: " . $config['spam_protection']['rate_limit']['limit'] . "\n";
         $yaml .= "      interval: '" . $config['spam_protection']['rate_limit']['interval'] . "'\n";
         $yaml .= "    min_submit_time: " . $config['spam_protection']['min_submit_time'] . "\n";
-
+        $yaml .= "    captcha:\n";
+        $yaml .= "      provider: " . ($config['spam_protection']['captcha']['provider'] ?? 'none') . "\n";
+        $yaml .= "      site_key: " . ($config['spam_protection']['captcha']['site_key'] ?? '~') . "\n";
+        $yaml .= "      secret_key: " . ($config['spam_protection']['captcha']['secret_key'] ?? '~') . "\n\n";
 
         // Email verification block
         $yaml .= "  email_verification:\n";
@@ -1007,9 +924,6 @@ class SetupCommand extends Command
             $yaml .= "\n  # Admin CRUD routes base path (only if using bundle entity with database storage)\n";
             $yaml .= "  crud_route_prefix: " . $config['crud_route_prefix'] . "\n";
         }
-        // Auto-sync configuration (prod-safe default)
-        $yaml .= "\n  # Auto-sync on cache:clear (dev environment overrides this to true)\n";
-        $yaml .= "  auto_sync_on_cache_clear: " . ($config['auto_sync_on_cache_clear'] ? 'true' : 'false') . "\n";
 
         file_put_contents($configFile, $yaml);
     }
@@ -1175,221 +1089,4 @@ class SetupCommand extends Command
             $this->io->error('Cache/asset operations failed: ' . $e->getMessage());
         }
     }
-
-    /**
-     * Check if required dependencies are available based on storage mode
-     * 
-     * @return array Array with 'continue', 'missing', and 'available' keys
-     */
-    private function checkDependencies(string $storageMode): array
-    {
-        $required = [
-            'doctrine' => in_array($storageMode, ['database', 'both'], true),
-            'mailer' => in_array($storageMode, ['email', 'both'], true),
-        ];
-
-        $available = [
-            'doctrine' => $this->entityManager !== null,
-            'mailer' => class_exists('Symfony\\Component\\Mailer\\Mailer'),
-        ];
-
-        $missing = [];
-        foreach ($required as $dep => $isRequired) {
-            if ($isRequired && !$available[$dep]) {
-                $missing[] = $dep;
-            }
-        }
-
-        if (!empty($missing)) {
-            $this->io->warning('Missing required dependencies for the selected storage mode:');
-            foreach ($missing as $dep) {
-                $package = $dep === 'doctrine' ? 'symfony/orm-pack' : 'symfony/mailer';
-                $this->io->writeln("  • <fg=red>{$dep}</> - Install with: <comment>composer require {$package}</comment>");
-            }
-            
-            if (!$this->io->confirm('Would you like to continue anyway? (Dependencies must be installed before using the bundle)', false)) {
-                return ['continue' => false, 'missing' => $missing, 'available' => $available];
-            }
-        }
-
-        return ['continue' => true, 'missing' => $missing, 'available' => $available];
-    }
-
-    /**
-     * Interactive property mapping for custom entity
-     * Lists all properties and asks which ones to include in the form
-     * 
-     * @param array<string, mixed> $metadata
-     * @return array<string, mixed>
-     */
-    private function askPropertyMapping(array $metadata, string $entityClass): array
-    {
-        $this->io->section('Custom Entity Property Mapping');
-        $this->io->info(sprintf('Entity: %s', $entityClass));
-        $this->io->writeln('Select which properties should be included in the contact form.');
-        $this->io->newLine();
-
-        $selectedProperties = [];
-        $autoMappings = [
-            'senderName' => 'name',
-            'senderEmail' => 'email',
-            'sender_name' => 'name',
-            'sender_email' => 'email',
-            'phoneNumber' => 'phone',
-            'phone_number' => 'phone',
-            'content' => 'message',
-        ];
-
-        foreach ($metadata as $propertyName => $propertyInfo) {
-            // Skip ID and technical fields
-            if (in_array($propertyName, ['id', 'createdAt', 'updatedAt', 'verified', 'verifiedAt', 'isVerified'], true)) {
-                continue;
-            }
-
-            $formFieldName = $propertyName;
-            $autoMapped = '';
-            
-            // Check for auto-mapping
-            if (isset($autoMappings[$propertyName])) {
-                $formFieldName = $autoMappings[$propertyName];
-                $autoMapped = sprintf(' (auto-mapped to: <comment>%s</comment>)', $formFieldName);
-            }
-
-            $include = $this->io->confirm(
-                sprintf('Include property <info>%s</info>%s in form?', $propertyName, $autoMapped),
-                true
-            );
-
-            if ($include) {
-                $selectedProperties[$propertyName] = [
-                    'formField' => $formFieldName,
-                    'type' => $this->guessFormFieldType($propertyName, $propertyInfo),
-                    'info' => $propertyInfo,
-                ];
-            }
-        }
-
-        if (empty($selectedProperties)) {
-            $this->io->warning('No properties selected! Using default fields.');
-            return $this->getDefaultFields();
-        }
-
-        // Ask if user wants to add new properties
-        $this->io->newLine();
-        $addNew = $this->io->confirm('Would you like to add additional form fields not in the entity?', false);
-        
-        $additionalFields = [];
-        if ($addNew) {
-            do {
-                $fieldName = $this->io->ask('Field name');
-                if ($fieldName) {
-                    $fieldType = $this->io->choice(
-                        'Field type',
-                        ['text', 'email', 'tel', 'textarea', 'checkbox', 'number'],
-                        'text'
-                    );
-                    $additionalFields[$fieldName] = [
-                        'formField' => $fieldName,
-                        'type' => $fieldType,
-                        'info' => ['type' => 'string', 'nullable' => false],
-                    ];
-                }
-                
-                $addAnother = $this->io->confirm('Add another field?', false);
-            } while ($addAnother);
-        }
-
-        // Generate form configuration
-        return $this->buildFormConfigFromPropertyMapping(array_merge($selectedProperties, $additionalFields));
-    }
-
-    /**
-     * Guess form field type based on property name and info
-     */
-    private function guessFormFieldType(string $propertyName, array $propertyInfo): string
-    {
-        $lower = strtolower($propertyName);
-        
-        if (str_contains($lower, 'email')) {
-            return 'email';
-        }
-        if (str_contains($lower, 'phone') || str_contains($lower, 'tel')) {
-            return 'tel';
-        }
-        if (str_contains($lower, 'message') || str_contains($lower, 'content') || str_contains($lower, 'body')) {
-            return 'textarea';
-        }
-        
-        // Check field type from metadata
-        $type = $propertyInfo['type'] ?? 'string';
-        if ($type === 'text' || (isset($propertyInfo['length']) && $propertyInfo['length'] > 255)) {
-            return 'textarea';
-        }
-        if ($type === 'integer' || $type === 'smallint' || $type === 'bigint') {
-            return 'number';
-        }
-        if ($type === 'boolean') {
-            return 'checkbox';
-        }
-        
-        return 'text';
-    }
-
-    /**
-     * Build form configuration from selected properties
-     * 
-     * @param array<string, array> $properties
-     * @return array<string, mixed>
-     */
-    private function buildFormConfigFromPropertyMapping(array $properties): array
-    {
-        $fields = [];
-        
-        foreach ($properties as $propertyName => $config) {
-            $formFieldName = $config['formField'];
-            $fields[$formFieldName] = [
-                'type' => $config['type'],
-                'required' => !($config['info']['nullable'] ?? false),
-                'label' => 'contact.field.' . $formFieldName,
-                'constraints' => $this->generateConstraints($config['type'], $config['info']),
-                'mapped_to' => $propertyName, // Store original property name
-            ];
-        }
-        
-        return $fields;
-    }
-
-
-    /**
-     * Create dev-specific configuration with auto_sync enabled
-     */
-    private function createDevAutoSyncConfig(): void
-    {
-        $devConfigDir = $this->projectDir . '/config/packages/dev';
-        $devConfigFile = $devConfigDir . '/contact_us.yaml';
-
-        // Create dev directory if it doesn't exist
-        if (!is_dir($devConfigDir)) {
-            mkdir($devConfigDir, 0755, true);
-        }
-
-        // Create dev config with auto_sync enabled
-        $devConfig = [
-            'contact_us' => [
-                'auto_sync_on_cache_clear' => true,
-            ],
-        ];
-
-        $yaml = Yaml::dump($devConfig, 4, 2);
-        
-        // Add a comment
-        $header = "# ContactUs Bundle - Development Environment Configuration\n";
-        $header .= "# Auto-sync enabled: configuration will be validated on cache:clear\n";
-        $header .= "# In production, run manually: php bin/console contact:config:sync\n\n";
-        
-        file_put_contents($devConfigFile, $header . $yaml);
-        
-        $this->io->writeln('<info>✓ Dev configuration created with auto_sync enabled</info>');
-    }
-
 }

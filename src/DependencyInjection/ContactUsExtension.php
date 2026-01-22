@@ -50,6 +50,7 @@ class ContactUsExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('contact_us.entity_class', $config['entity_class'] ?? \Caeligo\ContactUsBundle\Entity\ContactMessageEntity::class);
         $container->setParameter('contact_us.spam_protection', $config['spam_protection']);
         $container->setParameter('contact_us.fields', $config['fields']);
+        $container->setParameter('contact_us.api', $config['api']);
         $container->setParameter('contact_us.email_verification', $config['email_verification']);
         $container->setParameter('contact_us.mailer', $config['mailer']);
         $container->setParameter('contact_us.mailer.from_email', $config['mailer']['from_email'] ?? ($_ENV['CONTACT_EMAIL'] ?? null));

@@ -12,6 +12,7 @@ Complete configuration reference for ContactUsBundle.
    - [spam_protection](#spam_protection)
    - [crud_route_prefix](#crud_route_prefix)
    - [fields](#fields)
+   - [api](#api)
    - [email_verification](#email_verification)
    - [mailer](#mailer)
 3. [Environment Variables](#environment-variables)
@@ -76,7 +77,7 @@ Routes will be available at:
 ### spam_protection
 
 Base protections are always enabled by default: **Honeypot**, **Timing check**, and **Rate limiting**.
-Email verification is configured separately and only applies when `storage: both`.
+You can optionally enable a captcha provider. Email verification is configured separately and only applies when `storage: both`.
 
 #### rate_limit
 - `limit`: Maximum submissions per interval (default: 3)
@@ -84,6 +85,11 @@ Email verification is configured separately and only applies when `storage: both
 
 #### min_submit_time
 Minimum seconds between form load and submission (default: 3)
+
+#### captcha
+- `provider`: none, turnstile, hcaptcha, friendly, recaptcha
+- `site_key`: Public key for captcha provider
+- `secret_key`: Secret key for captcha provider
 
 ### fields
 Define custom form fields with validation. The defaults include `name`, `email`, `subject`, and `message`.
@@ -118,6 +124,16 @@ contact_us:
 - `Length` - Min/max length
 - `Regex` - Pattern matching
 - `Url` - Valid URL
+
+### api
+Enable REST API endpoints for headless/SPA usage.
+
+```yaml
+contact_us:
+    api:
+        enabled: true
+        route_prefix: '/api/contact'
+```
 
 ### email_verification
 Two-step verification via email. Only applicable when `storage: both`.

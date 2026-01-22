@@ -9,14 +9,14 @@
 - Spam Protection: base only, or with captcha
 
 **Expected Results:**
-- [x] `config/packages/contact_us.yaml` created with storage=email
-- [x] Form routes imported to `config/routes.yaml`
-- [x] No CRUD routes
-- [x] No database migration needed
-- [x] No table cleanup offered (first install)
-- [x] Form available at `/contact`
-- [x] Admin receives email on submission
-- [x] Client receives email on submission (when enabled)
+- [ ] `config/packages/contact_us.yaml` created with storage=email
+- [ ] Form routes imported to `config/routes.yaml`
+- [ ] No CRUD routes
+- [ ] No database migration needed
+- [ ] No table cleanup offered (first install)
+- [ ] Form available at `/contact`
+- [ ] Admin receives email on submission
+- [ ] Client receives email on submission (when enabled)
 
 ---
 
@@ -29,14 +29,14 @@
 - CRUD Route Prefix: `/admin/contact` (default)
 
 **Expected Results:**
-- [x] `config/packages/contact_us.yaml` created with storage=database
-- [x] Form routes imported to `config/routes.yaml`
-- [x] CRUD admin routes imported with prefix `/admin/contact`
-- [x] `entity_class` set to bundle entity
-- [x] Doctrine migration offered (user accepts or runs manually)
-- [x] After migration: admin routes available at `/admin/contact`
-- [x] Form available at `/contact`
-- [x] Messages saved to database, no email sent
+- [ ] `config/packages/contact_us.yaml` created with storage=database
+- [ ] Form routes imported to `config/routes.yaml`
+- [ ] CRUD admin routes imported with prefix `/admin/contact`
+- [ ] `entity_class` set to bundle entity
+- [ ] Doctrine migration offered (user accepts or runs manually)
+- [ ] After migration: admin routes available at `/admin/contact`
+- [ ] Form available at `/contact`
+- [ ] Messages saved to database, no email sent
 
 ---
 
@@ -192,7 +192,7 @@
 
 Use this checklist when running full regression:
 
-- [x] Scenario 1: Email-only (fresh)
+- [ ] Scenario 1: Email-only (fresh)
 - [ ] Scenario 2: Database-only + Bundle (fresh)
 - [ ] Scenario 3: Database-only + Custom (fresh)
 - [ ] Scenario 4: Both + Bundle + Verification ON (fresh)
@@ -204,11 +204,11 @@ Use this checklist when running full regression:
 - [ ] Scenario 10: Non-interactive mode
 
 **Additional Checks for Each:**
-- [x] Config file syntax and structure
-- [x] Routes properly imported
-- [x] Cache cleared successfully
-- [x] Form renders and works
-- [x] Email sending (if applicable)
+- [ ] Config file syntax and structure
+- [ ] Routes properly imported
+- [ ] Cache cleared successfully
+- [ ] Form renders and works
+- [ ] Email sending (if applicable)
 - [ ] Database operations (if applicable)
 - [ ] CRUD admin (if applicable)
 - [ ] Migrations generated & runnable (if applicable)
