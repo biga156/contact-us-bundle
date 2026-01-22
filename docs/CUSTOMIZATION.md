@@ -13,6 +13,8 @@ This guide explains how to customize the Contact Us Bundle to match your applica
 7. [Available Configuration Options](#available-configuration-options)
 8. [Need Help?](#need-help)
 
+Looking for ready-to-use snippets? See the [Examples](EXAMPLES.md).
+
 ---
 
 ## Overriding Templates

@@ -72,25 +72,27 @@ class DoctrineStorage implements StorageInterface
             } else {
                 // Map individual fields if setData is not available
                 foreach ($message->getData() as $key => $value) {
+                    // Convert snake_case to PascalCase for setter (e.g., 'first_name' -> 'setFirstName')
                     $setter = 'set' . str_replace('_', '', ucwords($key, '_'));
                     if (method_exists($entity, $setter)) {
                         $entity->$setter($value);
                     }
                 }
             }
-            if (method_exists($entity, 'setIpAddress')) {
+            // Set additional properties if they exist
+            if (method_exists($entity, 'setIpAddress') && $message->getIpAddress() !== null) {
                 $entity->setIpAddress($message->getIpAddress());
             }
-            if (method_exists($entity, 'setUserAgent')) {
+            if (method_exists($entity, 'setUserAgent') && $message->getUserAgent() !== null) {
                 $entity->setUserAgent($message->getUserAgent());
             }
             if (method_exists($entity, 'setVerified')) {
                 $entity->setVerified($message->isVerified());
             }
-            if (method_exists($entity, 'setVerificationToken')) {
+            if (method_exists($entity, 'setVerificationToken') && $message->getVerificationToken() !== null) {
                 $entity->setVerificationToken($message->getVerificationToken());
             }
-            if (method_exists($entity, 'setVerifiedAt')) {
+            if (method_exists($entity, 'setVerifiedAt') && $message->getVerifiedAt() !== null) {
                 $entity->setVerifiedAt($message->getVerifiedAt());
             }
         }
