@@ -284,6 +284,17 @@ class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+
+                // Dev mode configuration (only active when kernel.debug=true)
+                ->arrayNode('dev')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('auto_sync')
+                            ->info('Automatically sync config changes on cache:clear (dev mode only). When enabled, schema updates and table drops are handled automatically.')
+                            ->defaultFalse()
+                        ->end()
+                    ->end()
+                ->end()
             ->end()
         ;
 

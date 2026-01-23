@@ -312,3 +312,99 @@ Use this checklist when running full regression:
 - [ ] CRUD admin (if applicable)
 - [ ] Migrations generated & runnable (if applicable)
 - [ ] Table cleanup with double confirmation (if applicable)
+
+---
+
+## Dev Mode: Auto-Sync Configuration
+
+For development environments, the bundle provides an optional **auto-sync** feature that automatically applies configuration changes when you run `cache:clear`. This eliminates the need to re-run the setup wizard after manual YAML edits.
+
+### Enabling Auto-Sync
+
+Add the following to your `config/packages/contact_us.yaml`:
+
+```yaml
+# Only in dev environment
+when@dev:
+    contact_us:
+        dev:
+---
+
+## Dev Mode: Auto-Sync Configuration
+
+For development environments, the bundle provides an optional **auto-sync** feature that automatically detects and handles configuration changes when you run `cache:clear`. This eliminates the need to re-run the setup wizard after manual YAML edits.
+
+### Enabling Auto-Sync
+
+Add the following to your `config/packages/contact_us.yaml`:
+
+```yaml
+contact_us:
+    # ... other config ...
+    dev:
+        auto_sync: true
+```
+
+### What Auto-Sync Does
+
+When `dev.auto_sync: true` and `kernel.debug=true`, during every `cache:clear` (in the cache warmup phase):
+
+| Config Change | Auto-Sync Action |
+|--------------|------------------|
+| Storage: `database/both` → `email` | Logs info about unused table, suggests manual removal |
+| Storage: `email` → `database/both` | Creates table via migration if missing |
+| `fields` changed | Logs notification, form uses new fields on next request |
+| `mailer` changed | Logs notification, mailer uses new settings |
+| `entity_class` changed | Storage uses new entity class |
+
+### Important Notes
+
+1. **Production Safety**: Auto-sync only activates when:
+   - `kernel.debug = true` (dev environment)
+   - `dev.auto_sync = true` in config
+   
+2. **Table Operations**: 
+   - Switching **to email-only**: Logs a message about the unused table with suggestions
+   - Switching **to database/both**: Automatically runs migrations if table is missing
+   - For interactive table drop (with confirmation), use `php bin/console contact:setup`
+   
+3. **State Tracking**: Config state is stored in `var/contact_us_previous_state.json` to detect changes.
+
+4. **Logging**: All auto-sync actions are logged to `var/log/contact_us_auto_sync.log` and also output to console during `cache:clear`.
+
+5. **Preferred Method**: For production deployments, always use the setup wizard:
+   ```bash
+   php bin/console contact:setup
+   ```
+
+### Example Workflow
+
+```bash
+# 1. Initial setup via wizard
+php bin/console contact:setup
+
+# 2. Enable auto-sync for development
+# Edit config/packages/contact_us.yaml and add:
+#   dev:
+#       auto_sync: true
+
+# 3. Make manual edits to config (e.g., change storage mode)
+# Edit config/packages/contact_us.yaml:
+#   storage: email  # was: database
+
+# 4. Clear cache - auto-sync kicks in
+php bin/console cache:clear
+
+# Output shows during cache warmup:
+# [ContactUs Auto-Sync] Storage mode changed: database → email
+# [ContactUs Auto-Sync] Storage changed to 'email' - table 'cg_contact_message' is no longer needed...
+
+# 5. When changing back to database:
+php bin/console cache:clear
+
+# Output:
+# [ContactUs Auto-Sync] Storage mode changed: email → database  
+# [ContactUs Auto-Sync] Table 'cg_contact_message' does not exist. Creating...
+# [ContactUs Auto-Sync] Migration generated.
+# [ContactUs Auto-Sync] Migration executed successfully!
+```

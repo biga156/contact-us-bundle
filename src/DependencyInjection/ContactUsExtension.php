@@ -59,6 +59,8 @@ class ContactUsExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('contact_us.templates', $config['templates']);
         $container->setParameter('contact_us.design', $config['design']);
         $container->setParameter('contact_us.translation', $config['translation']);
+        $container->setParameter('contact_us.dev', $config['dev']);
+        $container->setParameter('contact_us.dev.auto_sync', $config['dev']['auto_sync']);
 
         // Load services
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));

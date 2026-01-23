@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Caeligo\ContactUsBundle\CacheWarmer\AutoSyncCacheWarmer;
 use Caeligo\ContactUsBundle\Command\SetupCommand;
 use Caeligo\ContactUsBundle\Controller\Admin\DefaultContactCrudController;
 use Caeligo\ContactUsBundle\Controller\ContactController;
@@ -114,4 +115,12 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$translation', param('contact_us.translation'))
         ->arg('$translator', service('translator')->nullOnInvalid())
         ->tag('twig.extension');
+
+    // Dev-mode: Auto-sync cache warmer (runs during cache:clear warmup phase)
+    $services->set(AutoSyncCacheWarmer::class)
+        ->arg('$projectDir', param('kernel.project_dir'))
+        ->arg('$isDebug', param('kernel.debug'))
+        ->arg('$autoSyncEnabled', param('contact_us.dev.auto_sync'))
+        ->arg('$entityManager', service('doctrine.orm.entity_manager')->nullOnInvalid())
+        ->tag('kernel.cache_warmer', ['priority' => -100]);
 };
