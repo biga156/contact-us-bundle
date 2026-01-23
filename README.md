@@ -174,6 +174,28 @@ Test coverage includes:
 
 **See the [Testing Guide](docs/TESTING.md) for complete documentation.**
 
+## Planned Features
+
+We are actively developing this bundle with the following improvements planned:
+
+- 🎨 **Design improvements** - Enhanced default styles and better UI/UX across all variants
+- 🔐 **Third-party captcha integrations** - Google reCAPTCHA, hCaptcha, Cloudflare Turnstile support
+- 🔌 **API support for third-party frontends** - RESTful API endpoints for custom frontend implementations
+- 📊 **EasyAdmin CRUD support** - Direct integration with EasyAdmin for enhanced admin panel functionality
+- 📈 **Advanced analytics** - Message tracking and reporting features
+- 🔗 **Webhook support** - Send contact data to external services
+
+## Contributing
+
+We welcome contributions! If you encounter bugs, have feature requests, or want to participate in development:
+
+1. **Report bugs** - Open an issue with detailed information about the problem
+2. **Suggest features** - Share your ideas in the discussions section
+3. **Contribute code** - Submit pull requests with improvements
+4. **Improve documentation** - Help us write better guides and examples
+
+Your feedback and contributions make this bundle better for everyone!
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) file for details.
