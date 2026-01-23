@@ -50,15 +50,16 @@ class SetupCommand extends Command
                 $this->importCrudRoutesToConfig();
             }
             $this->clearCacheAndCompileAssets();
+            
+            // Run migrations automatically for database/both storage modes
+            if (in_array($config['storage'], ['database', 'both'], true)) {
+                $this->handleMigrations();
+            }
 
             $this->io->success('ContactUs bundle configuration saved successfully (non-interactive).');
             $this->io->info('Configuration file: config/packages/contact_us.yaml');
             $this->io->info('Routes imported to: config/routes.yaml');
             $this->io->info('Cache cleared and assets compiled.');
-            $this->io->section('Next Steps');
-            $this->io->writeln('<comment>1. Generate and run migrations (bundle entity selected):</comment>');
-            $this->io->writeln('   php bin/console make:migration');
-            $this->io->writeln('   php bin/console doctrine:migrations:migrate');
             $this->io->writeln('');
             $this->io->writeln('<info>The contact form is now available at:</info>');
             $this->io->writeln('  • <fg=green>/contact</> (GET|POST) - Contact form page');
@@ -796,11 +797,16 @@ class SetupCommand extends Command
     {
         $this->io->section('Generating Migration');
         
+        // Build environment variables to pass to subprocesses
+        // This ensures .env.local values (like APP_SECRET) are available
+        $env = $this->getProcessEnv();
+        
         try {
             // Run make:migration
             $process = new Process(
                 ['php', 'bin/console', 'make:migration', '--no-interaction'],
-                $this->projectDir
+                $this->projectDir,
+                $env
             );
             $process->run();
 
@@ -811,7 +817,8 @@ class SetupCommand extends Command
                 $this->io->section('Running Migrations');
                 $migrateProcess = new Process(
                     ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction'],
-                    $this->projectDir
+                    $this->projectDir,
+                    $env
                 );
                 $migrateProcess->run();
 
@@ -833,6 +840,39 @@ class SetupCommand extends Command
                 'php bin/console doctrine:migrations:migrate',
             ]);
         }
+    }
+
+    /**
+     * Get environment variables for subprocess execution.
+     * Merges current process env with .env.local values to ensure secrets are available.
+     * 
+     * @return array<string, string>
+     */
+    private function getProcessEnv(): array
+    {
+        $env = $_SERVER;
+        
+        // Also read .env.local if it exists (for APP_SECRET etc.)
+        $envLocalFile = $this->projectDir . '/.env.local';
+        if (file_exists($envLocalFile)) {
+            $lines = file($envLocalFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (str_starts_with(trim($line), '#')) {
+                    continue;
+                }
+                if (str_contains($line, '=')) {
+                    [$key, $value] = explode('=', $line, 2);
+                    $key = trim($key);
+                    $value = trim($value);
+                    // Don't override if already set in current process
+                    if (!isset($env[$key]) || $env[$key] === '') {
+                        $env[$key] = $value;
+                    }
+                }
+            }
+        }
+        
+        return $env;
     }
 
     /**
@@ -1067,6 +1107,8 @@ class SetupCommand extends Command
      */
     private function clearCacheAndCompileAssets(): void
     {
+        $env = $this->getProcessEnv();
+        
         try {
             $this->io->writeln('');
             $this->io->writeln('<comment>Clearing cache...</comment>');
@@ -1074,7 +1116,8 @@ class SetupCommand extends Command
             // Clear cache
             $clearCacheProcess = new Process(
                 ['php', 'bin/console', 'cache:clear', '--no-warmup'],
-                $this->projectDir
+                $this->projectDir,
+                $env
             );
             $clearCacheProcess->run();
 
@@ -1089,7 +1132,8 @@ class SetupCommand extends Command
             $this->io->writeln('<comment>Compiling assets...</comment>');
             $assetCompileProcess = new Process(
                 ['php', 'bin/console', 'asset-map:compile', '--force'],
-                $this->projectDir
+                $this->projectDir,
+                $env
             );
             $assetCompileProcess->run();
 
