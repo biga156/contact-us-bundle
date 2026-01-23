@@ -380,8 +380,8 @@ class SetupCommand extends Command
             return $this->getDefaultFields();
         }
 
-        // TODO: Add manual field builder
-        return $this->getDefaultFields();
+        // Custom field builder (make:entity style)
+        return $this->buildCustomFields();
     }
 
     /**
@@ -1148,5 +1148,347 @@ class SetupCommand extends Command
         } catch (\Exception $e) {
             $this->io->error('Cache/asset operations failed: ' . $e->getMessage());
         }
+    }
+    // ========================================
+    // Custom Field Builder (make:entity style)
+    // ========================================
+
+    /**
+     * Available field types for the custom field builder.
+     */
+    private const FIELD_TYPES = [
+        'text' => 'Text (short string, max 255 chars)',
+        'textarea' => 'Textarea (long text, max 5000 chars)',
+        'email' => 'Email address',
+        'tel' => 'Telephone number (with country code selector)',
+        'url' => 'URL',
+        'number' => 'Number (integer)',
+        'choice' => 'Choice (dropdown/radio/checkboxes)',
+    ];
+
+    /**
+     * Build custom fields interactively (make:entity style).
+     * 
+     * @return array<string, mixed>
+     */
+    private function buildCustomFields(): array
+    {
+        $this->io->section('Custom Field Builder');
+        $this->io->text([
+            'Add fields to your contact form one by one.',
+            'Press <comment>[Enter]</comment> with an empty name to finish.',
+            '',
+        ]);
+
+        // Email field is mandatory - create it automatically
+        $fields = [
+            'email' => [
+                'type' => 'email',
+                'required' => true,
+                'label' => 'contact.field.email',
+                'constraints' => [
+                    ['NotBlank' => []],
+                    ['Email' => []],
+                ],
+            ],
+        ];
+
+        $this->io->note('The "email" field is required and has been created automatically.');
+        $this->io->newLine();
+
+        // Interactive field builder loop
+        while (true) {
+            $fieldName = $this->askFieldName(array_keys($fields));
+            
+            if ($fieldName === null) {
+                // Empty input - finish
+                break;
+            }
+
+            $fieldConfig = $this->askFieldConfiguration($fieldName);
+            $fields[$fieldName] = $fieldConfig;
+            
+            $this->io->success(sprintf('Field "%s" added!', $fieldName));
+            $this->io->newLine();
+        }
+
+        // Show preview and confirm
+        if (!$this->confirmFieldsPreview($fields)) {
+            // User rejected - restart
+            $this->io->warning('Restarting field builder...');
+            return $this->buildCustomFields();
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Ask for field name with validation.
+     * 
+     * @param array<string> $existingFields
+     */
+    private function askFieldName(array $existingFields): ?string
+    {
+        $fieldName = $this->io->ask(
+            'New field name (press <comment>[Enter]</comment> to stop adding fields)',
+            null,
+            function (?string $input) use ($existingFields): ?string {
+                if ($input === null || $input === '') {
+                    return null;
+                }
+
+                // Validate field name format
+                $input = strtolower(trim($input));
+                
+                if (!preg_match('/^[a-z][a-z0-9_]*$/', $input)) {
+                    throw new \RuntimeException(
+                        'Field name must start with a letter and contain only letters, numbers, and underscores.'
+                    );
+                }
+
+                // Check reserved names
+                if ($input === 'email') {
+                    throw new \RuntimeException('The "email" field already exists (it is mandatory).');
+                }
+
+                if (in_array($input, $existingFields, true)) {
+                    throw new \RuntimeException(sprintf('Field "%s" already exists.', $input));
+                }
+
+                // Check Symfony reserved names
+                $reserved = ['submit', 'reset', 'data', 'form', 'type', 'options', 'parent'];
+                if (in_array($input, $reserved, true)) {
+                    throw new \RuntimeException(sprintf('"%s" is a reserved name and cannot be used.', $input));
+                }
+
+                return $input;
+            }
+        );
+
+        return $fieldName;
+    }
+
+    /**
+     * Ask for complete field configuration.
+     * 
+     * @return array<string, mixed>
+     */
+    private function askFieldConfiguration(string $fieldName): array
+    {
+        // Ask field type
+        $type = $this->io->choice(
+            sprintf('Field type for "%s"', $fieldName),
+            self::FIELD_TYPES,
+            'text'
+        );
+
+        // Ask if required
+        $required = $this->io->confirm('Is this field required?', true);
+
+        // Ask for label (with smart default)
+        $defaultLabel = 'contact.field.' . $fieldName;
+        $label = $this->io->ask(
+            'Field label (translation key or text)',
+            $defaultLabel
+        );
+
+        // Build constraints based on type
+        $constraints = $this->buildConstraintsForType($type, $required, $fieldName);
+
+        // Build field config
+        $config = [
+            'type' => $type,
+            'required' => $required,
+            'label' => $label,
+            'constraints' => $constraints,
+        ];
+
+        // Type-specific options
+        $options = $this->askTypeSpecificOptions($type, $fieldName);
+        if (!empty($options)) {
+            $config['options'] = $options;
+        }
+
+        return $config;
+    }
+
+    /**
+     * Build constraints array based on field type.
+     * 
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildConstraintsForType(string $type, bool $required, string $fieldName): array
+    {
+        $constraints = [];
+
+        if ($required) {
+            $constraints[] = ['NotBlank' => []];
+        }
+
+        switch ($type) {
+            case 'email':
+                $constraints[] = ['Email' => []];
+                break;
+
+            case 'url':
+                $constraints[] = ['Url' => []];
+                break;
+
+            case 'text':
+                $maxLength = $this->io->ask(
+                    'Maximum length',
+                    '255',
+                    fn($v) => (int) $v
+                );
+                $constraints[] = ['Length' => ['max' => $maxLength]];
+                break;
+
+            case 'textarea':
+                $maxLength = $this->io->ask(
+                    'Maximum length',
+                    '5000',
+                    fn($v) => (int) $v
+                );
+                $constraints[] = ['Length' => ['max' => $maxLength]];
+                break;
+
+            case 'number':
+                if ($this->io->confirm('Add min/max range validation?', false)) {
+                    $min = $this->io->ask('Minimum value (empty for no limit)', null);
+                    $max = $this->io->ask('Maximum value (empty for no limit)', null);
+                    
+                    $rangeConstraint = [];
+                    if ($min !== null && $min !== '') {
+                        $rangeConstraint['min'] = (int) $min;
+                    }
+                    if ($max !== null && $max !== '') {
+                        $rangeConstraint['max'] = (int) $max;
+                    }
+                    if (!empty($rangeConstraint)) {
+                        $constraints[] = ['Range' => $rangeConstraint];
+                    }
+                }
+                break;
+
+            case 'tel':
+                // Phone validation will be handled by TelephoneType
+                // Add basic regex for international format
+                $constraints[] = ['Regex' => [
+                    'pattern' => '/^\+?[0-9\s\-\(\)]{6,20}$/',
+                    'message' => 'Please enter a valid phone number.',
+                ]];
+                break;
+
+            case 'choice':
+                // Choice validation will use the choices from options
+                break;
+        }
+
+        return $constraints;
+    }
+
+    /**
+     * Ask for type-specific options.
+     * 
+     * @return array<string, mixed>
+     */
+    private function askTypeSpecificOptions(string $type, string $fieldName): array
+    {
+        $options = [];
+
+        switch ($type) {
+            case 'choice':
+                $this->io->text([
+                    '<comment>Note:</comment> You can customize choices later in the YAML config.',
+                    'For now, placeholder options will be generated.',
+                ]);
+                
+                $expanded = $this->io->confirm('Display as radio buttons/checkboxes instead of dropdown?', false);
+                $multiple = $this->io->confirm('Allow multiple selections?', false);
+                
+                $options['expanded'] = $expanded;
+                $options['multiple'] = $multiple;
+                $options['choices'] = [
+                    'Option 1' => 'option1',
+                    'Option 2' => 'option2', 
+                    'Option 3' => 'option3',
+                ];
+                $options['placeholder'] = $multiple ? false : 'Choose an option...';
+                
+                $this->io->note(sprintf(
+                    'Remember to customize the choices for "%s" in config/packages/contact_us.yaml',
+                    $fieldName
+                ));
+                break;
+
+            case 'tel':
+                $this->io->text([
+                    'Phone field will display a country code selector with the number input.',
+                    'You can restrict allowed countries in the YAML config.',
+                ]);
+                
+                $restrictCountries = $this->io->confirm('Restrict to specific countries?', false);
+                
+                if ($restrictCountries) {
+                    $countriesInput = $this->io->ask(
+                        'Enter country codes separated by comma (e.g., HU,DE,AT,FR)',
+                        null
+                    );
+                    
+                    if ($countriesInput) {
+                        $countries = array_map('trim', explode(',', strtoupper($countriesInput)));
+                        $options['allowed_countries'] = $countries;
+                    }
+                }
+                break;
+
+            case 'textarea':
+                $rows = $this->io->ask('Number of rows (height)', '5', fn($v) => (int) $v);
+                if ($rows !== 5) {
+                    $options['attr'] = ['rows' => $rows];
+                }
+                break;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Show fields preview and ask for confirmation.
+     * 
+     * @param array<string, mixed> $fields
+     */
+    private function confirmFieldsPreview(array $fields): bool
+    {
+        $this->io->section('Fields Preview');
+
+        $rows = [];
+        foreach ($fields as $name => $config) {
+            $constraintList = [];
+            foreach ($config['constraints'] ?? [] as $constraint) {
+                $constraintName = array_key_first($constraint);
+                $constraintList[] = $constraintName;
+            }
+
+            $rows[] = [
+                $name,
+                $config['type'],
+                $config['required'] ? '✓' : '',
+                $config['label'],
+                implode(', ', $constraintList) ?: '-',
+            ];
+        }
+
+        $this->io->table(
+            ['Name', 'Type', 'Required', 'Label', 'Constraints'],
+            $rows
+        );
+
+        $this->io->text([
+            '<comment>Note:</comment> Field order in the form matches the order above.',
+            'You can reorder fields later by editing config/packages/contact_us.yaml',
+        ]);
+
+        return $this->io->confirm('Proceed with these fields?', true);
     }
 }

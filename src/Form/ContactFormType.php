@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Caeligo\ContactUsBundle\Form;
 
+use Caeligo\ContactUsBundle\Form\Type\TelephoneType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -26,7 +27,7 @@ class ContactFormType extends AbstractType
         'text' => TextType::class,
         'email' => EmailType::class,
         'textarea' => TextareaType::class,
-        'tel' => TelType::class,
+        'tel' => TelephoneType::class,  // Use our custom TelephoneType
         'url' => UrlType::class,
         'number' => NumberType::class,
         'choice' => ChoiceType::class,
@@ -95,7 +96,7 @@ class ContactFormType extends AbstractType
             'attr' => $config['options']['attr'] ?? [],
         ];
 
-        // Add custom options (e.g., choices for ChoiceType)
+        // Add custom options (e.g., choices for ChoiceType, allowed_countries for TelephoneType)
         if (isset($config['options']) && is_array($config['options'])) {
             foreach ($config['options'] as $key => $value) {
                 if ($key !== 'attr') {

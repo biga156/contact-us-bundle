@@ -408,3 +408,163 @@ php bin/console cache:clear
 # [ContactUs Auto-Sync] Migration generated.
 # [ContactUs Auto-Sync] Migration executed successfully!
 ```
+
+---
+
+## Custom Field Builder
+
+When running the setup wizard and choosing **not** to use default fields, an interactive field builder (similar to Symfony's `make:entity` command) guides you through creating custom form fields.
+
+### How It Works
+
+1. **Email field is mandatory** - Created automatically with proper validation
+2. **Add fields one by one** - Enter field name, choose type, set options
+3. **Preview before saving** - See all configured fields in a table
+4. **Reject and restart** - If not satisfied, restart the field builder
+
+### Supported Field Types
+
+| Type | Description | Default Constraints |
+|------|-------------|---------------------|
+| `text` | Short text input (max 255 chars) | Length max |
+| `textarea` | Long text input (max 5000 chars) | Length max |
+| `email` | Email address | Email validator |
+| `tel` | Phone with country selector | Regex pattern |
+| `url` | URL input | URL validator |
+| `number` | Integer input | Optional Range |
+| `choice` | Dropdown/radio/checkboxes | Uses defined choices |
+
+### Telephone Field (tel)
+
+The `tel` type provides a compound field with:
+- **Country code dropdown** with emoji flags (🇭🇺, 🇩🇪, 🇫🇷, etc.)
+- **Phone number input** for the local number
+
+Data is stored as a single international format string: `+36301234567`
+
+#### Configuration Options
+
+```yaml
+fields:
+  phone:
+    type: tel
+    required: true
+    label: contact.field.phone
+    options:
+      # Restrict to specific countries (optional)
+      allowed_countries: ['HU', 'AT', 'DE', 'SK']
+      # Default country selection (default: 'HU')
+      default_country: 'HU'
+```
+
+#### Country List
+
+By default, ~40 common countries are included. If `symfony/intl` is installed, country names will be localized.
+
+Developers can customize the country selector via JavaScript or CSS if needed. Each option includes:
+- `data-code` attribute with the calling code (e.g., `+36`)
+- `data-flag` attribute with the emoji flag (e.g., `🇭🇺`)
+
+### Choice Field
+
+For dropdown/radio/checkbox fields, placeholder options are generated during setup. **You must customize them in the YAML config:**
+
+```yaml
+fields:
+  inquiry_type:
+    type: choice
+    required: true
+    label: contact.field.inquiry_type
+    options:
+      # Dropdown (default)
+      expanded: false
+      multiple: false
+      placeholder: 'Choose an option...'
+      # Customize these choices!
+      choices:
+        'General Inquiry': general
+        'Sales Question': sales
+        'Technical Support': support
+        'Partnership': partnership
+```
+
+For radio buttons:
+```yaml
+options:
+  expanded: true
+  multiple: false
+```
+
+For checkboxes (multiple selection):
+```yaml
+options:
+  expanded: true
+  multiple: true
+```
+
+### Field Order
+
+Fields appear in the form in the same order as defined in the YAML config. To reorder, simply rearrange the field entries in `config/packages/contact_us.yaml`.
+
+### Example: Custom Contact Form
+
+```yaml
+contact_us:
+  fields:
+    # Email is always first (required)
+    email:
+      type: email
+      required: true
+      label: contact.field.email
+      constraints:
+        - NotBlank: {}
+        - Email: {}
+    
+    # Name field
+    name:
+      type: text
+      required: true
+      label: contact.field.name
+      constraints:
+        - NotBlank: {}
+        - Length: { max: 100 }
+    
+    # Company (optional)
+    company:
+      type: text
+      required: false
+      label: contact.field.company
+      constraints:
+        - Length: { max: 200 }
+    
+    # Phone with country selector
+    phone:
+      type: tel
+      required: false
+      label: contact.field.phone
+      options:
+        allowed_countries: ['HU', 'AT', 'DE', 'SK', 'CZ']
+        default_country: 'HU'
+    
+    # Inquiry type dropdown
+    inquiry_type:
+      type: choice
+      required: true
+      label: contact.field.inquiry_type
+      options:
+        choices:
+          'General Inquiry': general
+          'Sales': sales
+          'Support': support
+    
+    # Message
+    message:
+      type: textarea
+      required: true
+      label: contact.field.message
+      options:
+        attr: { rows: 8 }
+      constraints:
+        - NotBlank: {}
+        - Length: { min: 20, max: 5000 }
+```
