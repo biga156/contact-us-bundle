@@ -38,10 +38,17 @@
         <div class="contact-form-fields">
             {% for field in form %}
                 {% if field.vars.name not in ['_token', 'email_confirm', '_form_token_time'] %}
-                    <div class="contact-form-field">
+                    {% set has_errors = field.vars.errors|length > 0 %}
+                    <div class="contact-form-field{% if has_errors %} has-error{% endif %}">
                         {{ form_label(field, field.vars.label|contact_trans) }}
-                        {{ form_widget(field, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(field) }}
+                        {{ form_widget(field, {'attr': {'class': 'form-control' ~ (has_errors ? ' is-invalid' : '')}}) }}
+                        {% if has_errors %}
+                            <ul class="form-errors">
+                                {% for error in field.vars.errors %}
+                                    <li class="form-error">{{ error.message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                     </div>
                 {% endif %}
             {% endfor %}

@@ -1,25 +1,95 @@
+/**
+ * ContactUs Bundle - Default Styles
+ * 
+ * Easily customizable via CSS variables.
+ * Override these variables in your own stylesheet to customize the appearance.
+ * 
+ * Usage:
+ * :root {
+ *   --contact-primary: #your-color;
+ *   --contact-card-bg: #your-bg;
+ * }
+ */
+
 :root {
-    --contact-font: 'Inter', 'Segoe UI', sans-serif;
+    /* === Typography === */
+    --contact-font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    
+    /* === Colors - Light Theme (default) === */
     --contact-primary: #2563eb;
+    --contact-primary-hover: #1d4ed8;
     --contact-bg: #f8fafc;
-    --contact-card: #ffffff;
+    --contact-card-bg: #ffffff;
     --contact-border: #e2e8f0;
     --contact-text: #0f172a;
-    --contact-muted: #475569;
-    --contact-focus: 0 0 0 3px rgba(37, 99, 235, 0.25);
-    --contact-success: #16a34a;
-    --contact-error: #dc2626;
-    --contact-radius: 12px;
+    --contact-text-muted: #475569;
+    --contact-text-light: #64748b;
+    
+    /* === Form Inputs === */
+    --contact-input-bg: #ffffff;
+    --contact-input-border: #e2e8f0;
+    --contact-input-text: #0f172a;
+    --contact-input-placeholder: #94a3b8;
+    --contact-input-focus-border: var(--contact-primary);
+    --contact-input-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    
+    /* === Dropdown (select) === */
+    --contact-dropdown-bg: var(--contact-input-bg);
+    --contact-dropdown-border: var(--contact-input-border);
+    --contact-dropdown-text: var(--contact-input-text);
+    --contact-dropdown-option-bg: var(--contact-input-bg);
+    --contact-dropdown-option-hover-bg: #f1f5f9;
+    --contact-dropdown-option-text: var(--contact-input-text);
+    
+    /* === Status Colors === */
+    --contact-success-bg: #ecfdf5;
+    --contact-success-border: #a7f3d0;
+    --contact-success-text: #065f46;
+    --contact-error-bg: #fef2f2;
+    --contact-error-border: #fecaca;
+    --contact-error-text: #dc2626;
+    
+    /* === Spacing & Sizing === */
+    --contact-radius: 10px;
+    --contact-radius-sm: 8px;
+    --contact-spacing: 18px;
+    --contact-input-padding: 12px 14px;
+}
+
+/* === Dark Theme Variables === */
+/* Apply these when using a dark card/container background */
+.contact-form--dark,
+.contact-form-container--dark {
+    --contact-card-bg: #1e293b;
+    --contact-border: #334155;
+    --contact-text: #f1f5f9;
+    --contact-text-muted: #94a3b8;
+    --contact-text-light: #64748b;
+    
+    --contact-input-bg: #0f172a;
+    --contact-input-border: #334155;
+    --contact-input-text: #f1f5f9;
+    --contact-input-placeholder: #64748b;
+    
+    --contact-dropdown-bg: #0f172a;
+    --contact-dropdown-border: #334155;
+    --contact-dropdown-text: #f1f5f9;
+    --contact-dropdown-option-bg: #1e293b;
+    --contact-dropdown-option-hover-bg: #334155;
+    --contact-dropdown-option-text: #f1f5f9;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
+/* === Base Reset === */
 .contact-form *,
+.contact-form-container *,
 .contact-admin-card *,
 .contact-admin-container * {
     box-sizing: border-box;
 }
 
+/* === Container === */
 .contact-form-container {
     max-width: 720px;
     margin: 32px auto;
@@ -28,157 +98,341 @@
     color: var(--contact-text);
 }
 
+/* === Form Card === */
 .contact-form {
-    background: var(--contact-card);
+    background: var(--contact-card-bg);
     border: 1px solid var(--contact-border);
     border-radius: var(--contact-radius);
-    padding: 26px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    padding: 28px;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
 }
 
+/* === Header === */
 .contact-form-header {
-    margin-bottom: 18px;
+    margin-bottom: 24px;
 }
 
 .contact-form-header h1 {
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     font-size: 24px;
+    font-weight: 600;
     color: var(--contact-text);
 }
 
 .contact-form-header p {
     margin: 0;
-    color: var(--contact-muted);
+    color: var(--contact-text-muted);
+    font-size: 15px;
 }
 
+/* === Fields Container === */
 .contact-form-fields {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: var(--contact-spacing);
     width: 100%;
-    min-width: 0;
 }
 
+/* === Single Field === */
 .contact-form-field {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     min-width: 0;
 }
 
+/* === Labels === */
 .contact-form-field label {
     font-size: 13px;
     font-weight: 600;
-    color: var(--contact-muted);
+    color: var(--contact-text-muted);
     margin: 0;
-    padding: 0;
 }
 
+/* === All Form Inputs (text, email, tel, textarea, select) === */
 .contact-form-field .form-control,
-.contact-form-field input,
+.contact-form-field input[type="text"],
+.contact-form-field input[type="email"],
+.contact-form-field input[type="tel"],
+.contact-form-field input[type="url"],
+.contact-form-field input[type="number"],
 .contact-form-field textarea,
 .contact-form-field select {
     width: 100%;
     min-width: 0;
-    padding: 12px 14px;
+    padding: var(--contact-input-padding);
     font-size: 15px;
     line-height: 1.5;
-    border: 1px solid var(--contact-border);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--contact-text);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    border: 1px solid var(--contact-input-border);
+    border-radius: var(--contact-radius-sm);
+    background: var(--contact-input-bg);
+    color: var(--contact-input-text);
     font-family: inherit;
-    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
+.contact-form-field .form-control::placeholder,
+.contact-form-field input::placeholder,
+.contact-form-field textarea::placeholder {
+    color: var(--contact-input-placeholder);
+}
+
+/* === Focus State === */
 .contact-form-field .form-control:focus,
 .contact-form-field input:focus,
 .contact-form-field textarea:focus,
 .contact-form-field select:focus {
     outline: none;
-    border-color: var(--contact-primary);
-    box-shadow: var(--contact-focus);
-    background: #fff;
+    border-color: var(--contact-input-focus-border);
+    box-shadow: var(--contact-input-focus-shadow);
 }
 
+/* === Textarea Specific === */
 .contact-form-field textarea,
 .contact-form-field textarea.form-control {
-    min-height: 150px;
+    min-height: 140px;
     resize: vertical;
 }
 
+/* === Select / Dropdown Styling === */
+.contact-form-field select,
+.contact-form-field select.form-control {
+    background-color: var(--contact-dropdown-bg);
+    color: var(--contact-dropdown-text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+/* Select dropdown options - browser native, enhanced where possible */
+.contact-form-field select option {
+    background-color: var(--contact-dropdown-option-bg);
+    color: var(--contact-dropdown-option-text);
+    padding: 10px 14px;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+@supports (-webkit-appearance: none) {
+    .contact-form-field select option:hover,
+    .contact-form-field select option:focus,
+    .contact-form-field select option:checked {
+        background: var(--contact-dropdown-option-hover-bg);
+    }
+}
+
+/* Firefox specific styling for select dropdown */
+@-moz-document url-prefix() {
+    .contact-form-field select option {
+        background-color: var(--contact-dropdown-option-bg);
+        color: var(--contact-dropdown-option-text);
+    }
+}
+
+/* =============================================
+   TELEPHONE FIELD - Compound Type
+   ============================================= */
+
+/* Container for the telephone compound field */
+.contact-form-field > .form-control[id$="_phone"],
+.contact-form-field > div[id$="_phone"],
+#contact_phone.form-control {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    align-items: stretch;
+}
+
+/* Reset form-control styles when it's a telephone container */
+.contact-form-field > .form-control[id$="_phone"]:focus,
+.contact-form-field > div[id$="_phone"]:focus,
+#contact_phone.form-control:focus {
+    box-shadow: none;
+    border: none;
+}
+
+/* Country code dropdown */
+.contact-phone-country,
+select.contact-phone-country {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 140px;
+    max-width: 180px;
+    padding: var(--contact-input-padding);
+    font-size: 15px;
+    border: 1px solid var(--contact-input-border);
+    border-radius: var(--contact-radius-sm);
+    background-color: var(--contact-dropdown-bg);
+    color: var(--contact-dropdown-text);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+/* Phone number input */
+.contact-phone-number,
+input.contact-phone-number {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: var(--contact-input-padding);
+    font-size: 15px;
+    border: 1px solid var(--contact-input-border);
+    border-radius: var(--contact-radius-sm);
+    background: var(--contact-input-bg);
+    color: var(--contact-input-text);
+}
+
+.contact-phone-country:focus,
+.contact-phone-number:focus {
+    outline: none;
+    border-color: var(--contact-input-focus-border);
+    box-shadow: var(--contact-input-focus-shadow);
+}
+
+/* Country dropdown options */
+.contact-phone-country option {
+    background-color: var(--contact-dropdown-option-bg);
+    color: var(--contact-dropdown-option-text);
+    padding: 8px 12px;
+}
+
+/* =============================================
+   VALIDATION ERRORS
+   ============================================= */
+
+/* Error state for inputs */
+.contact-form-field.has-error .form-control,
+.contact-form-field.has-error input,
+.contact-form-field.has-error select,
+.contact-form-field.has-error textarea,
+.contact-form-field .form-control.is-invalid,
+.contact-form-field input.is-invalid,
+.contact-form-field select.is-invalid,
+.contact-form-field textarea.is-invalid {
+    border-color: var(--contact-error-text);
+}
+
+.contact-form-field.has-error .form-control:focus,
+.contact-form-field .form-control.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Error messages - multiple selector patterns for Symfony compatibility */
 .contact-form-field .invalid-feedback,
 .contact-form-field .form-errors,
-.contact-form-field .form-error-message {
-    color: var(--contact-error);
+.contact-form-field .form-error-message,
+.contact-form-field ul.form-errors,
+.contact-form-field li.form-error,
+.contact-form-field .help-block.form-error {
+    color: var(--contact-error-text);
     font-size: 13px;
-    margin: 0;
+    font-weight: 500;
+    margin: 4px 0 0 0;
     padding: 0;
     list-style: none;
+    display: block;
+}
+
+.contact-form-field .form-errors {
+    padding-left: 0;
 }
 
 .contact-form-field .form-errors li {
-    margin: 0;
+    margin: 2px 0;
+    padding: 0;
 }
 
+/* Show invalid-feedback when present */
+.contact-form-field .invalid-feedback {
+    display: block;
+}
+
+/* =============================================
+   ALERTS (Success/Error messages)
+   ============================================= */
+
 .alert {
-    padding: 12px 14px;
-    border-radius: 10px;
+    padding: 14px 16px;
+    border-radius: var(--contact-radius-sm);
     font-size: 14px;
-    margin-bottom: 14px;
+    font-weight: 500;
+    margin-bottom: 18px;
     border: 1px solid transparent;
 }
 
 .alert-success {
-    background: #ecfdf3;
-    border-color: #bbf7d0;
-    color: #166534;
+    background: var(--contact-success-bg);
+    border-color: var(--contact-success-border);
+    color: var(--contact-success-text);
 }
 
 .alert-danger {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+    background: var(--contact-error-bg);
+    border-color: var(--contact-error-border);
+    color: var(--contact-error-text);
 }
 
+/* =============================================
+   SUBMIT BUTTON
+   ============================================= */
+
 .contact-form-submit {
-    margin-top: 12px;
+    margin-top: 24px;
     display: flex;
     justify-content: flex-end;
 }
 
-.contact-form-submit .btn {
-    padding: 11px 18px;
+.contact-form-submit .btn,
+.contact-form-submit button[type="submit"] {
+    padding: 12px 24px;
     font-size: 15px;
     font-weight: 600;
     border: none;
-    border-radius: 10px;
+    border-radius: var(--contact-radius-sm);
     cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.15s ease;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.contact-form-submit .btn-primary {
+.contact-form-submit .btn-primary,
+.contact-form-submit button[type="submit"] {
     background: var(--contact-primary);
     color: #fff;
-    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
-.contact-form-submit .btn-primary:hover {
+.contact-form-submit .btn-primary:hover,
+.contact-form-submit button[type="submit"]:hover {
+    background: var(--contact-primary-hover);
     transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
 }
 
-.contact-form-submit .btn-primary:focus {
+.contact-form-submit .btn-primary:focus,
+.contact-form-submit button[type="submit"]:focus {
     outline: none;
-    box-shadow: var(--contact-focus);
+    box-shadow: var(--contact-input-focus-shadow);
 }
 
-.contact-form-submit .btn-primary:disabled {
-    opacity: 0.7;
+.contact-form-submit .btn-primary:disabled,
+.contact-form-submit button[type="submit"]:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
     box-shadow: none;
 }
+
+/* =============================================
+   HONEYPOT & HIDDEN FIELDS
+   ============================================= */
 
 .contact-honeypot {
     position: absolute;
@@ -186,6 +440,8 @@
     width: 1px;
     height: 1px;
     overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .contact-timing-token,
@@ -200,6 +456,10 @@ input.contact-timing-token {
     border: 0;
 }
 
+/* =============================================
+   ADMIN STYLES
+   ============================================= */
+
 .contact-admin-container {
     max-width: 1120px;
     margin: 32px auto;
@@ -209,34 +469,36 @@ input.contact-timing-token {
 }
 
 .contact-admin-card {
-    background: var(--contact-card);
+    background: var(--contact-card-bg);
     border: 1px solid var(--contact-border);
     border-radius: var(--contact-radius);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-    padding: 22px;
+    box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+    padding: 24px;
 }
 
 .contact-admin-header {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .contact-admin-header h1 {
     margin: 0;
     font-size: 22px;
+    font-weight: 600;
     color: var(--contact-text);
 }
 
 .contact-admin-header p {
     margin: 0;
-    color: var(--contact-muted);
+    color: var(--contact-text-muted);
 }
 
 .contact-admin-table-wrapper {
-    margin-top: 12px;
+    margin-top: 16px;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .contact-admin-table {
@@ -252,12 +514,20 @@ input.contact-timing-token {
 .contact-admin-table th,
 .contact-admin-table td {
     text-align: left;
-    padding: 12px 10px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--contact-border);
 }
 
+.contact-admin-table th {
+    font-weight: 600;
+    color: var(--contact-text-muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
 .contact-admin-table tbody tr:hover {
-    background: #f8fafc;
+    background: var(--contact-bg);
 }
 
 .contact-admin-table tbody tr:last-child td {
@@ -280,10 +550,10 @@ input.contact-timing-token {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 14px;
+    padding: 10px 16px;
     font-size: 14px;
     font-weight: 600;
-    border-radius: 10px;
+    border-radius: var(--contact-radius-sm);
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
@@ -296,18 +566,22 @@ input.contact-timing-token {
 
 .contact-button:focus {
     outline: none;
-    box-shadow: var(--contact-focus);
+    box-shadow: var(--contact-input-focus-shadow);
 }
 
 .contact-button--ghost {
-    background: #f8fafc;
+    background: var(--contact-bg);
     border-color: var(--contact-border);
     color: var(--contact-text);
 }
 
+.contact-button--ghost:hover {
+    background: var(--contact-border);
+}
+
 .contact-button--danger {
-    background: #fee2e2;
-    border-color: #fecaca;
+    background: var(--contact-error-bg);
+    border-color: var(--contact-error-border);
     color: #b91c1c;
 }
 
@@ -317,36 +591,39 @@ input.contact-timing-token {
 
 .contact-admin-empty {
     text-align: center;
-    color: var(--contact-muted);
-    padding: 18px 0;
+    color: var(--contact-text-muted);
+    padding: 32px 16px;
 }
 
 .contact-admin-details {
     display: grid;
     grid-template-columns: 160px 1fr;
-    gap: 10px 14px;
-    margin: 8px 0 18px;
+    gap: 12px 16px;
+    margin: 12px 0 20px;
 }
 
 .contact-admin-details dt {
     font-weight: 600;
-    color: var(--contact-muted);
+    color: var(--contact-text-muted);
+    font-size: 13px;
 }
 
 .contact-admin-details dd {
     margin: 0;
+    color: var(--contact-text);
 }
 
 .contact-admin-message {
     white-space: pre-wrap;
     background: var(--contact-bg);
-    padding: 12px;
-    border-radius: 10px;
+    padding: 14px;
+    border-radius: var(--contact-radius-sm);
     border: 1px solid var(--contact-border);
+    font-family: inherit;
 }
 
 .contact-admin-pagination {
-    margin-top: 18px;
+    margin-top: 20px;
     display: flex;
     justify-content: flex-end;
 }
@@ -354,7 +631,7 @@ input.contact-timing-token {
 .contact-pagination {
     list-style: none;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     padding: 0;
     margin: 0;
 }
@@ -367,13 +644,16 @@ input.contact-timing-token {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
+    min-width: 36px;
     height: 36px;
-    border-radius: 10px;
+    padding: 0 10px;
+    border-radius: var(--contact-radius-sm);
     border: 1px solid var(--contact-border);
-    background: #fff;
+    background: var(--contact-card-bg);
     color: var(--contact-text);
     text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
@@ -383,23 +663,50 @@ input.contact-timing-token {
     color: #fff;
 }
 
-.contact-pagination-item:hover .contact-page-link {
+.contact-pagination-item:not(.active):hover .contact-page-link {
     border-color: var(--contact-primary);
+    color: var(--contact-primary);
 }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
 
 @media (max-width: 900px) {
     .contact-admin-details {
         grid-template-columns: 1fr;
     }
+    
+    .contact-admin-details dt {
+        margin-bottom: -8px;
+    }
 }
 
 @media (max-width: 600px) {
+    .contact-form-container {
+        padding: 0 12px;
+        margin: 20px auto;
+    }
+    
     .contact-form {
-        padding: 18px;
+        padding: 20px;
+    }
+    
+    /* Telephone field stacks on very small screens */
+    .contact-form-field > .form-control[id$="_phone"],
+    .contact-form-field > div[id$="_phone"],
+    #contact_phone.form-control {
+        flex-direction: column;
+    }
+    
+    .contact-phone-country,
+    select.contact-phone-country {
+        min-width: 100%;
+        max-width: 100%;
     }
 
     .contact-admin-card {
-        padding: 18px;
+        padding: 16px;
     }
 
     .contact-admin-actions {
@@ -410,5 +717,32 @@ input.contact-timing-token {
     .contact-button {
         justify-content: center;
         width: 100%;
+    }
+    
+    .contact-form-submit {
+        justify-content: stretch;
+    }
+    
+    .contact-form-submit .btn,
+    .contact-form-submit button[type="submit"] {
+        width: 100%;
+    }
+}
+
+/* =============================================
+   PRINT STYLES
+   ============================================= */
+
+@media print {
+    .contact-form-submit,
+    .contact-admin-actions,
+    .contact-admin-pagination {
+        display: none;
+    }
+    
+    .contact-form,
+    .contact-admin-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
     }
 }

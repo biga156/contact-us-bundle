@@ -16,7 +16,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Compound form type for phone numbers with country code selector.
  * 
- * Displays two fields:
+ * Displays two fields inline:
  * - Country code dropdown with emoji flags
  * - Phone number input
  * 
@@ -78,6 +78,11 @@ class TelephoneType extends AbstractType
     {
         $view->vars['allowed_countries'] = $options['allowed_countries'];
         $view->vars['default_country'] = $options['default_country'];
+        
+        // Add wrapper class for styling
+        $view->vars['attr']['class'] = trim(
+            ($view->vars['attr']['class'] ?? '') . ' contact-phone-wrapper'
+        );
     }
 
     public function configureOptions(OptionsResolver $resolver): void
